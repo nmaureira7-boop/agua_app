@@ -1,0 +1,76 @@
+<div class="d-flex justify-content-center">
+  <div class="card p-4 shadow-lg bg-white rounded animate__animated animate__fadeInDown" style="max-width: 500px; width: 100%;">
+    <h2 class="text-center mb-4">Editar perfil</h2>
+    <form method="post" id="perfilForm" novalidate>
+      <!-- Nombre -->
+      <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ usuario[0] }}" required>
+        <div class="invalid-feedback">Ingresa tu nombre.</div>
+      </div>
+
+      <!-- Apellido -->
+      <div class="mb-3">
+        <label for="apellido" class="form-label">Apellido</label>
+        <input type="text" class="form-control" id="apellido" name="apellido" value="{{ usuario[1] }}" required>
+        <div class="invalid-feedback">Ingresa tu apellido.</div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="mb-3">
+        <label for="direccion" class="form-label">Dirección</label>
+        <input type="text" class="form-control" id="direccion" name="direccion" value="{{ usuario[3] }}" required>
+        <div class="invalid-feedback">Ingresa tu dirección.</div>
+      </div>
+
+      <!-- Correo (solo lectura) -->
+      <div class="mb-3">
+        <label for="correo" class="form-label">Correo</label>
+        <input type="email" class="form-control" id="correo" value="{{ usuario[2] }}" readonly>
+      </div>
+
+      <!-- Nueva contraseña -->
+      <div class="mb-3">
+        <label for="nueva_contraseña" class="form-label">Nueva contraseña</label>
+        <input type="password" class="form-control" id="nueva_contraseña" name="nueva_contraseña" minlength="6">
+        <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres.</div>
+      </div>
+
+      <!-- Confirmar nueva contraseña -->
+      <div class="mb-3">
+        <label for="confirmar_contraseña" class="form-label">Repetir nueva contraseña</label>
+        <input type="password" class="form-control" id="confirmar_contraseña" name="confirmar_contraseña">
+        <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fa-solid fa-save"></i> Guardar cambios
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('perfilForm');
+    const nueva = document.getElementById('nueva_contraseña');
+    const confirmar = document.getElementById('confirmar_contraseña');
+
+    form.addEventListener('submit', (event) => {
+      if (nueva.value !== confirmar.value) {
+        confirmar.setCustomValidity("Las contraseñas no coinciden");
+      } else {
+        confirmar.setCustomValidity("");
+      }
+
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        form.classList.add('animate__animated', 'animate__fadeOutUp');
+      }
+
+      form.classList.add('was-validated');
+    });
+  });
+</script>

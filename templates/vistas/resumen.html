@@ -1,0 +1,214 @@
+{% if vista == 'resumen' %} {# inicio resumen #}
+<h2 class="text-center mb-4">Resumen de consumo</h2>
+<!-- Filtros -->
+<form method="post" class="row g-2 justify-content-center mb-4">
+  <div class="col-auto">
+    <select name="año" class="form-select">
+      <option value="">Todos los años</option>
+      {% for a in años_disponibles %}
+        <option value="{{ a }}" {% if a == año_seleccionado %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="mes" class="form-select">
+      <option value="">Todos los meses</option>
+      {% for i in range(1, 13) %}
+        <option value="{{ i }}" {% if i == mes_seleccionado %}selected{% endif %}>{{ i | month_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-filter"></i> Filtrar</button>
+  </div>
+</form>
+<!-- Mensajes flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div class="alert alert-{{ category }} text-center">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+<!-- Botón de exportación -->
+<form method="post" action="/exportar_resumen">
+  <input type="hidden" name="año" value="{{ año_seleccionado }}">
+  <input type="hidden" name="mes" value="{{ mes_seleccionado }}">
+  <button type="submit" class="btn btn-success mb-4">
+    <i class="fa-solid fa-file-excel"></i> Exportar resumen a Excel
+  </button>
+</form>
+<!-- Mensaje si no hay datos -->
+{% if not labels_mensual and not labels_anual %}
+  <div class="alert alert-warning text-center">
+    No hay datos disponibles para los filtros seleccionados.
+  </div>
+{% endif %}
+<!-- Gráfico mensual -->
+{% if labels_mensual %}
+  <h5 class="text-center">
+    Consumo diario en {{ mes_seleccionado | month_name }} {{ año_seleccionado or "actual" }}
+  </h5>
+  <canvas id="graficoMensual" height="100"></canvas>
+  <div class="text-center mb-4">
+    <button onclick="descargarGrafico('graficoMensual', 'grafico_mensual.png')" class="btn btn-outline-primary">
+      Descargar gráfico mensual
+    </button>
+  </div>
+{% endif %}
+<!-- Gráfico anual -->
+{% if labels_anual %}
+  <h5 class="text-center">
+    {% if año_seleccionado and not mes_seleccionado %}
+      Consumo mensual en {{ año_seleccionado }}
+    {% elif mes_seleccionado %}
+      Consumo en {{ mes_seleccionado | month_name }} a lo largo de los años
+    {% else %}
+      Consumo en {{ mes_seleccionado | month_name }} a lo largo de los años
+    {% endif %}
+  </h5>
+  <canvas id="graficoAnual" height="100"></canvas>
+  <div class="text-center mb-4">
+    <button onclick="descargarGrafico('graficoAnual', 'grafico_anual.png')" class="btn btn-outline-success">
+      Descargar gráfico anual
+    </button>
+  </div>
+{% endif %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Script de descarga -->
+<script>
+  function descargarGrafico(idCanvas, nombreArchivo) {
+    const canvas = document.getElementById(idCanvas);
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = nombreArchivo;
+    link.click();
+  }
+</script>
+<!-- Script gráfico mensual -->
+{% if labels_mensual is defined %}
+<script>
+  const labelsMensual = {{ labels_mensual | tojson | safe }};  // Ej: ["3", "7", "15"]
+  const datosMensual = {{ valores_mensual | tojson | safe }};  // Ej: [12.5, 8.3, 15.0]
+
+  if (labelsMensual.length) {
+    new Chart(document.getElementById('graficoMensual'), {
+      type: 'bar',
+      data: {
+        labels: labelsMensual,
+        datasets: [{
+          label: 'Consumo diario (m³)',
+          data: datosMensual,
+          backgroundColor: 'rgba(255, 159, 64, 0.6)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Consumo por día con ingreso registrado'
+          },
+          tooltip: {
+            callbacks: {
+              title: (tooltipItems) => 'Día ' + tooltipItems[0].label,
+              label: (tooltipItem) => tooltipItem.raw + ' m³'
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Día del mes'
+            },
+            ticks: {
+              precision: 0
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Consumo (m³)'
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endif %}
+<!-- Script gráfico anual -->
+  {% if labels_anual is defined %}
+  <script>
+    const labelsAnual = {{ labels_anual | tojson | safe }};
+    const datosAnual = {{ valores_anual | tojson | safe }};
+    if (labelsAnual.length) {
+      new Chart(document.getElementById('graficoAnual'), {
+        type: 'bar',
+        data: {
+          labels: labelsAnual,
+          datasets: [{
+            label: 'Consumo anual (m³)',
+            data: datosAnual,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            borderRadius: 5,
+            hoverBackgroundColor: 'rgba(75, 192, 192, 0.8)',
+            hoverBorderColor: 'rgba(75, 192, 192, 1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#333',
+                font: {
+                  size: 14,
+                  weight: 'bold'
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#f5f5f5',
+              titleColor: '#333',
+              bodyColor: '#000',
+              borderColor: '#ccc',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: '#333',
+                font: { size: 12 }
+              },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#333',
+              font: { size: 12 }
+            },
+              grid: {
+                color: 'rgba(200, 200, 200, 0.2)'
+              }
+            }
+          },
+          animation: {
+            duration: 1000,
+            easing: 'easeOutBounce'
+          }
+        }
+      });
+    }
+  </script>
+{% endif %}  {# cierre de vista == 'resumen' #}
+{% endif %} {# cierre de vista == 'resumen' #}

@@ -1,0 +1,72 @@
+<div class="d-flex justify-content-center">
+  <div class="card p-4 shadow-lg bg-white rounded animate__animated animate__fadeInDown" style="max-width: 400px; width: 100%;">
+    <h2 class="text-center mb-4">Crea tu cuenta</h2>
+    <form method="post" id="registroForm" novalidate>
+      <!-- Nombre -->
+      <div class="mb-3">
+        <label for="nombre" class="form-label"><i class="fa-solid fa-user"></i> Nombre</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" required>
+        <div class="invalid-feedback">Ingresa tu nombre.</div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="mb-3">
+        <label for="direccion" class="form-label"><i class="fa-solid fa-location-dot"></i> Dirección</label>
+        <input type="text" class="form-control" id="direccion" name="direccion" required>
+        <div class="invalid-feedback">Ingresa tu dirección.</div>
+      </div>
+
+      <!-- Correo -->
+      <div class="mb-3">
+        <label for="correo" class="form-label"><i class="fa-solid fa-envelope"></i> Correo electrónico</label>
+        <input type="email" class="form-control" id="correo" name="correo" required>
+        <div class="invalid-feedback">Ingresa un correo válido.</div>
+      </div>
+
+      <!-- Contraseña -->
+<div class="mb-3">
+  <label for="contraseña" class="form-label"><i class="fa-solid fa-lock"></i> Contraseña</label>
+  <input type="password" class="form-control" id="contraseña" name="contraseña" required minlength="6">
+  <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres.</div>
+</div>
+
+<!-- Repetir contraseña -->
+<div class="mb-3">
+  <label for="confirmar_contraseña" class="form-label"><i class="fa-solid fa-lock"></i> Repetir contraseña</label>
+  <input type="password" class="form-control" id="confirmar_contraseña" name="confirmar_contraseña" required>
+  <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+</div>
+
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fa-solid fa-user-plus"></i> Registrarse
+      </button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a href="/login" class="text-decoration-none">¿Ya tienes cuenta? Inicia sesión</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('registroForm');
+    const pass1 = document.getElementById('contraseña');
+    const pass2 = document.getElementById('confirmar_contraseña');
+
+    form.addEventListener('submit', (event) => {
+      if (pass1.value !== pass2.value) {
+        pass2.setCustomValidity("Las contraseñas no coinciden");
+      } else {
+        pass2.setCustomValidity("");
+      }
+
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      form.classList.add('was-validated');
+    });
+  });
+</script>

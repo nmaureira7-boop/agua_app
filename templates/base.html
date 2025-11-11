@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>BlueDate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap y librerías -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Estilos para modo oscuro -->
+  <style>
+    .dark-mode {
+      background-color: #121212;
+      color: #f0f0f0;
+    }
+
+    .dark-mode .navbar {
+      background-color: #1f1f1f !important;
+    }
+
+    .dark-mode .btn-outline-light {
+      border-color: #f0f0f0;
+      color: #f0f0f0;
+    }
+
+    .dark-mode .card,
+    .dark-mode .table,
+    .dark-mode .form-control {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
+
+    .dark-mode .form-control::placeholder {
+      color: #ccc;
+    }
+
+    .dark-mode .dropdown-menu {
+      background-color: #2a2a2a;
+      color: #f0f0f0;
+    }
+
+    .dark-mode .dropdown-item:hover {
+      background-color: #3a3a3a;
+    }
+  </style>
+</head>
+<body>
+
+  {% include 'vistas/navbar.html' %}
+
+  <!-- Mensajes flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__fadeInDown mx-3 mt-3" role="alert">
+          {% if category == 'success' %}
+            <i class="fa-solid fa-circle-check me-2"></i>
+          {% elif category == 'warning' %}
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+          {% elif category == 'error' %}
+            <i class="fa-solid fa-circle-xmark me-2"></i>
+          {% elif category == 'info' %}
+            <i class="fa-solid fa-circle-info me-2"></i>
+          {% endif %}
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Contenido dinámico -->
+  <div class="container mt-4">
+  {% block content %}
+    {% if vista == 'login' %}
+      {% include 'vistas/login.html' %}
+    {% elif vista == 'registro' %}
+      {% include 'vistas/registro.html' %}
+    {% elif vista == 'ingreso' %}
+      {% include 'vistas/ingreso.html' %}
+    {% elif vista == 'resumen' %}
+      {% include 'vistas/resumen.html' %}
+    {% elif vista == 'dashboard' %}
+      {% include 'vistas/dashboard.html' %}
+    {% elif vista == 'pago' %}
+      {% include 'vistas/pago.html' %}
+    {% elif vista == 'editar_ingreso_manual' %}
+      {% include 'vistas/editar_ingreso.html' %}
+    {% elif vista == 'historial_pagos' %}
+      {% include 'vistas/historial_pagos.html' %}
+    {% elif vista == 'perfil' %}
+      {% include 'vistas/perfil.html' %}
+    {% elif vista == 'admin_tarifas' %}
+      {% include 'vistas/admin_tarifas.html' %}
+      {% if session['usuario_rol'] == 'admin' %}
+  <span class="badge bg-warning text-dark ms-2">👑 Administrador</span>
+{% endif %}
+    {% endif %}
+  {% endblock %}
+</div>
+
+  <!-- Script para modo oscuro -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('toggleTheme');
+      const body = document.body;
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const savedTheme = localStorage.getItem('theme');
+
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        body.classList.add('dark-mode');
+        if (toggleBtn) {
+          toggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i> Modo claro';
+        }
+      }
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          body.classList.toggle('dark-mode');
+          const isDark = body.classList.contains('dark-mode');
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          toggleBtn.innerHTML = isDark
+            ? '<i class="fa-solid fa-sun"></i> Modo claro'
+            : '<i class="fa-solid fa-moon"></i> Modo oscuro';
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

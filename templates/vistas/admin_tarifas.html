@@ -1,0 +1,63 @@
+<div class="container py-4">
+  <h2 class="mb-4 text-center">Administrar tramos de tarifas</h2>
+
+  <!-- Tabla de tramos con edición -->
+  <table class="table table-bordered table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>Desde (m³)</th>
+        <th>Hasta (m³)</th>
+        <th>Precio por m³</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tramo in tramos %}
+        <form method="post" action="/admin/tarifas/editar/{{ tramo[0] }}">
+          <tr>
+            <td>
+              <input type="number" name="desde" class="form-control" value="{{ tramo[1] }}" required>
+            </td>
+            <td>
+              <input type="number" name="hasta" class="form-control" value="{{ tramo[2] if tramo[2] is not none else '' }}">
+              <small class="text-muted">∞ si vacío</small>
+            </td>
+            <td>
+              <input type="number" name="precio" class="form-control" value="{{ tramo[3] }}" required>
+            </td>
+            <td class="text-center">
+              <button type="submit" class="btn btn-sm btn-primary me-2">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar
+              </button>
+              <a href="/admin/tarifas/eliminar/{{ tramo[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este tramo?')">
+                <i class="fa-solid fa-trash"></i> Eliminar
+              </a>
+            </td>
+          </tr>
+        </form>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Formulario para agregar tramo -->
+  <form method="post" class="mt-4">
+    <h5 class="mb-3">Agregar nuevo tramo</h5>
+    <div class="row g-2">
+      <div class="col-md-3">
+        <input type="number" name="desde" class="form-control" placeholder="Desde (m³)" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="hasta" class="form-control" placeholder="Hasta (m³)">
+        <small class="text-muted">Dejar vacío para ∞</small>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="precio" class="form-control" placeholder="Precio por m³" required>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-success w-100">
+          <i class="fa-solid fa-plus"></i> Agregar tramo
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,85 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <i class="fa-solid fa-droplet"></i> BlueDate
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarOpciones" aria-controls="navbarOpciones" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarOpciones">
+      {% if session['usuario_id'] %}
+      <!-- Menú para usuarios con sesión iniciada -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link {% if vista == 'resumen' %}active{% endif %}" href="/resumen">
+            <i class="fa-solid fa-chart-column"></i> Resumen
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if vista == 'ingreso' %}active{% endif %}" href="/ingreso">
+            <i class="fa-solid fa-pen-to-square"></i> Ingreso
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if vista == 'dashboard' %}active{% endif %}" href="/dashboard">
+            <i class="fa-solid fa-gauge-high"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if vista == 'pago' %}active{% endif %}" href="/pago">
+            <i class="fa-solid fa-money-check-dollar"></i> Pago
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if vista == 'historial_pagos' %}active{% endif %}" href="/historial_pagos">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historial de pagos
+          </a>
+        </li>
+
+        {% if session['usuario_rol'] == 'admin' %}
+        <li class="nav-item">
+          <a class="nav-link {% if vista == 'admin_tarifas' %}active{% endif %}" href="/admin/tarifas">
+            <i class="fa-solid fa-sliders"></i> Tarifas
+            <span class="badge bg-warning text-dark ms-1">👑</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="fa-solid fa-user"></i> {{ session['usuario_nombre'] }}
+            {% if session['usuario_rol'] == 'admin' %}
+              <span class="badge bg-warning text-dark ms-1">👑 Administrador</span>
+            {% endif %}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="/perfil"><i class="fa-solid fa-user-gear"></i> Editar perfil</a></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+              <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+            </a>
+            </a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <button id="toggleTheme" class="btn btn-outline-light btn-sm ms-3">
+            <i class="fa-solid fa-moon"></i> Modo oscuro
+          </button>
+        </li>
+      </ul>
+
+      {% else %}
+      <!-- Menú para usuarios sin sesión -->
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/login">
+            <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+          </a>
+        </li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,75 @@
+<h4 class="mb-4">Consumo diario: promedio y proyección</h4>
+<canvas id="graficoDashboard" height="100"></canvas>
+
+<script>
+  const labelsDias = {{ labels_dias | tojson | safe }};
+  const datosPromedio = {{ valores_promedio | tojson | safe }};
+  const datosFuturos = {{ valores_futuros | tojson | safe }};
+
+  const colores = labelsDias.map((_, i) => {
+    const base = [75, 192, 192];
+    const factor = 0.6 + (i % 5) * 0.1;
+    return `rgba(${base[0]}, ${base[1]}, ${base[2]}, ${factor})`;
+  });
+
+  new Chart(document.getElementById('graficoDashboard'), {
+    type: 'bar',
+    data: {
+      labels: labelsDias,
+      datasets: [
+        {
+          label: 'Promedio diario (m³)',
+          data: datosPromedio,
+          backgroundColor: colores,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        },
+        {
+          label: 'Ingreso futuro (m³)',
+          data: datosFuturos,
+          type: 'line',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderWidth: 2,
+          pointStyle: 'circle',
+          pointRadius: 5,
+          spanGaps: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Promedio y proyección de consumo por día'
+        },
+        tooltip: {
+          callbacks: {
+            title: items => 'Día ' + items[0].label,
+            label: item => item.dataset.label + ': ' + item.raw + ' m³'
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Día del mes'
+          },
+          ticks: {
+            precision: 0
+          }
+        },
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Consumo (m³)'
+          }
+        }
+      }
+    }
+  });
+</script>

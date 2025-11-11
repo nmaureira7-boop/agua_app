@@ -1,0 +1,76 @@
+<div class="d-flex justify-content-center">
+  <div class="card p-4 shadow-lg bg-white rounded" style="max-width: 500px; width: 100%;">
+    <h2 class="text-center mb-4">Ingreso de lectura</h2>
+
+    <!-- Dirección registrada -->
+    {% if direccion_usuario %}
+      <div class="alert alert-info">
+        <p><strong>Dirección registrada:</strong></p>
+        <ul class="mb-2">
+          <li><i class="fa-solid fa-location-dot"></i> <strong>Dirección:</strong> {{ direccion_usuario }}</li>
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Advertencia si ya se registró una lectura hoy -->
+    {% if lectura_hoy %}
+      <div class="alert alert-warning">
+        ⚠️ Ya registraste una lectura hoy. Puedes ingresar otra si lo deseas.
+      </div>
+    {% endif %}
+
+    <!-- Formulario de ingreso -->
+    <form method="post" id="ingresoForm" novalidate>
+      <!-- Dirección mostrada automáticamente -->
+      <div class="mb-3">
+        <label class="form-label"><i class="fa-solid fa-location-dot"></i> Dirección registrada</label>
+        <input type="text" name="direccion1" class="form-control" value="{{ direccion_usuario }}" readonly>
+      </div>
+
+      <!-- Lectura actual -->
+      <div class="mb-3">
+        <label for="lectura_m3" class="form-label"><i class="fa-solid fa-tint"></i> Lectura actual (m³)</label>
+        <input type="number" step="0.01" name="lectura_m3" id="lectura_m3" class="form-control" required min="0">
+        <div class="invalid-feedback">Ingresa una lectura válida.</div>
+      </div>
+
+      <!-- Fecha automática -->
+      <div class="mb-3">
+        <label class="form-label"><i class="fa-solid fa-calendar-day"></i> Fecha</label>
+        <input type="date" name="fecha1" class="form-control" value="{{ fecha_actual }}" readonly>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fa-solid fa-save"></i> Guardar lectura
+      </button>
+    </form>
+
+    <!-- Historial de lecturas recientes -->
+    {% if lecturas_recientes %}
+      <hr>
+      <h5 class="mt-4 text-center">Lecturas recientes</h5>
+      <ul class="list-group">
+        {% for lectura in lecturas_recientes %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-calendar-day"></i> {{ lectura.fecha }} — {{ lectura.consumo }} m³</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('ingresoForm');
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      });
+    }
+  });
+</script>

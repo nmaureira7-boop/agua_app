@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h1 class="display-4">Bienvenido a <strong>BlueDate</strong></h1>
+    <p class="lead">Una solución digital para el control, transparencia y eficiencia en el consumo de agua.</p>
+  </div>
+
+  <div class="mb-5">
+    <h2 class="h4"><i class="fa-solid fa-bullseye me-2"></i> Objetivo del proyecto</h2>
+    <p>Facilitar el ingreso, visualización y seguimiento del consumo de agua potable por parte de los usuarios, promoviendo la transparencia, el control personal y la eficiencia en el uso del recurso hídrico.</p>
+  </div>
+
+  <div class="mb-5">
+    <h2 class="h4"><i class="fa-solid fa-lightbulb me-2"></i> Propuesta inicial</h2>
+    <p>Desarrollar una plataforma web donde los usuarios puedan registrar sus lecturas de medidor, visualizar su historial de consumo, realizar pagos, y acceder a reportes visuales que les permitan tomar decisiones informadas sobre su consumo.</p>
+  </div>
+
+  <div class="mb-5">
+    <h2 class="h4"><i class="fa-solid fa-triangle-exclamation me-2"></i> Contexto y problemática</h2>
+    <p>En muchas comunidades, el control del consumo de agua es limitado, lo que genera cobros inesperados, poca conciencia del uso responsable y dificultades para llevar un registro histórico. BlueDate busca empoderar a los usuarios con herramientas simples y visuales para revertir esta situación.</p>
+  </div>
+
+  <div class="mb-5">
+    <h2 class="h4"><i class="fa-solid fa-circle-question me-2"></i> Preguntas clave sobre el sistema</h2>
+    <div class="accordion" id="faqSistema">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="pregunta1">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#respuesta1">
+            ¿De qué manera un sistema digital puede mejorar la precisión en la lectura del consumo de agua?
+          </button>
+        </h2>
+        <div id="respuesta1" class="accordion-collapse collapse" data-bs-parent="#faqSistema">
+          <div class="accordion-body">
+            Un sistema digital permite registrar lecturas de consumo de forma más precisa y en tiempo real, eliminando errores humanos asociados a la lectura manual. Al integrar sensores o medidores inteligentes, se puede detectar fugas o consumos anómalos, registrar datos con mayor frecuencia y exactitud, y visualizar el historial de consumo para que los usuarios ajusten su comportamiento.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="pregunta2">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#respuesta2">
+            ¿Qué nivel de accesibilidad y facilidad de uso ofrece un sistema digital de pago del servicio de agua?
+          </button>
+        </h2>
+        <div id="respuesta2" class="accordion-collapse collapse" data-bs-parent="#faqSistema">
+          <div class="accordion-body">
+            Un sistema digital bien diseñado puede ofrecer alta accesibilidad y usabilidad para diversos perfiles de usuario. Interfaces intuitivas y responsivas permiten el acceso desde celulares, tablets o computadores. El diseño inclusivo facilita el uso por personas mayores o con discapacidad, y los pagos en línea evitan desplazamientos físicos, lo que es especialmente útil en zonas rurales o para personas con movilidad reducida.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="pregunta3">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#respuesta3">
+            ¿Cómo influye la automatización de la lectura y el pago del agua en la eficiencia del proceso de facturación?
+          </button>
+        </h2>
+        <div id="respuesta3" class="accordion-collapse collapse" data-bs-parent="#faqSistema">
+          <div class="accordion-body">
+            La automatización mejora significativamente la eficiencia operativa: reduce errores humanos en la toma de lecturas y en el cálculo de facturas, acelera el proceso de facturación, permite detectar inconsistencias como consumos atípicos, y optimiza recursos humanos para tareas de mayor valor.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="pregunta4">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#respuesta4">
+            ¿Qué impacto tiene la implementación de un sistema digital en la transparencia y confianza de los usuarios hacia el servicio de agua?
+          </button>
+        </h2>
+        <div id="respuesta4" class="accordion-collapse collapse" data-bs-parent="#faqSistema">
+          <div class="accordion-body">
+            La digitalización fortalece la confianza del usuario al ofrecer acceso directo a su historial de consumo y pagos, transparencia en la facturación con cálculos visibles y trazables, notificaciones automáticas sobre consumos elevados o fechas de pago, y una mayor percepción de control y empoderamiento.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
