@@ -17,7 +17,7 @@ import os
 def get_connection():
     dsn = f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_SERVICE')}"
     return oracledb.connect(
-        user=os.getenv("nmaureira7@gmail.com"),
-        password=os.getenv("Nicoxx164325."),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASS"),
         dsn=dsn
     )
