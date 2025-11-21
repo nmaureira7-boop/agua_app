@@ -10,7 +10,7 @@ def get_connection():
         user=os.getenv("DB_USER"),          # ADMIN
         password=os.getenv("DB_PASS"),      # contraseña del usuario
         dsn="bluedate_tp",                  # alias exacto definido en tnsnames.ora
-        config_dir="/opt/render/project/src/agua_app/wallet",   # carpeta con los archivos del wallet
-        wallet_location="/opt/render/project/src/agua_app/wallet",
-        wallet_password=os.getenv("WALLET_PASS")   # clave del wallet desde variable de entorno
+        config_dir="/opt/render/project/src/wallet",   # 👈 carpeta en la raíz del repo
+        wallet_location="/opt/render/project/src/wallet",
+        wallet_password=os.getenv("WALLET_PASS")       # clave del wallet desde variable de entorno
     )
