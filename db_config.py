@@ -21,7 +21,7 @@ def get_connection():
     return oracledb.connect(
         user=os.getenv("DB_USER"),          # ADMIN
         password=os.getenv("DB_PASS"),      # tu contraseña
-        dsn="g41d7b285d304e7_bluedate_high.adb.oraclecloud.com",  # servicio del wallet
+        dsn="g41d7b285d304e7_bluedate_high",  # servicio del wallet
         config_dir="/opt/render/project/src/wallet",   # carpeta con los archivos del wallet
         wallet_location="/opt/render/project/src/wallet",
         wallet_password="WALLET_PASS"           # el que definiste al descargar el wallet
