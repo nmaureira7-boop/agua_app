@@ -14,12 +14,15 @@ DB_SERVICE = os.getenv("DB_SERVICE")
 import oracledb
 import os
 
+import os
+import oracledb
+
 def get_connection():
-    dsn = f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_SERVICE')}"
-    print("🔍 Conectando con:", dsn)
-    print("Usuario:", os.getenv("DB_USER"))
     return oracledb.connect(
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASS"),
-        dsn=dsn
+        user=os.getenv("DB_USER"),          # ADMIN
+        password=os.getenv("DB_PASS"),      # tu contraseña
+        dsn="g41d7b285d304e7_bluedate_high.adb.oraclecloud.com",  # servicio del wallet
+        config_dir="/opt/render/project/src/wallet",   # carpeta con los archivos del wallet
+        wallet_location="/opt/render/project/src/wallet",
+        wallet_password="WALLET_PASS"           # el que definiste al descargar el wallet
     )
