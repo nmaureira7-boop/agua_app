@@ -1,27 +1,30 @@
 FROM python:3.11-slim
 
-# Dependencias del sistema (Oracle + OpenCV)
+# Dependencias para OpenCV + Tesseract
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
-    libaio-dev \
     tesseract-ocr \
     libtesseract-dev \
     libgl1 \
     libglib2.0-0 \
+    libaio-dev \
     && apt-get clean
 
-WORKDIR /app
+# Render coloca tu proyecto en /opt/render/project/src
+# Usamos la misma ruta para evitar problemas con wallet
+WORKDIR /opt/render/project/src
 
-# Copiar requerimientos
+# Copiar requirements
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar todo el proyecto
+# Copiar TODO el proyecto (incluye wallet/)
 COPY . .
 
 # Exponer puerto
 EXPOSE 5000
 
-# Comando de inicio
+# Iniciar servidor
 CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:5000"]
