@@ -112,7 +112,6 @@ from flask import render_template, request, redirect, session, flash
 from db_config import get_connection
 from utils import validar_consumo, obtener_ingreso_usuario
 
-
 @app.route('/ingreso', methods=['GET', 'POST'])
 def ingreso():
     if 'usuario_id' not in session:
@@ -171,18 +170,11 @@ def ingreso():
         # ✅ Dirección ingresada (si se modificó)
         direccion_form = request.form.get('direccion1') or direccion_usuario
 
-        # ✅ Fecha ingresada (solo si es admin)
-        fecha_form = request.form.get('fecha1')
-        if correo_usuario == 'admin@aguas.cl' and fecha_form:
-            fecha_ingreso = fecha_form
-        else:
-            fecha_ingreso = fecha_hoy
-
-        # ✅ Insertar ingreso
+        # ✅ Insertar ingreso con lectura, consumo y monto
         cursor.execute("""
             INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha)
             VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'))
-        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_ingreso])
+        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy])
 
         # ✅ Actualizar dirección si cambió
         if direccion_form != direccion_usuario:
@@ -192,7 +184,6 @@ def ingreso():
             direccion_usuario = direccion_form
 
         conn.commit()
-        flash(f"✅ Lectura registrada. Consumo: {consumo} m³. Monto a pagar: ${monto:,}", "success")
         cursor.close()
         conn.close()
         return redirect('/pago')
@@ -209,10 +200,13 @@ def ingreso():
     )
 @app.route("/resumen", methods=["GET", "POST"])
 def resumen():
-    if 'usuario_id' not in session:
-        return redirect('/login')
+    if "usuario_id" not in session:
+        return redirect("/login")
 
     from datetime import datetime
+    import calendar
+    from collections import defaultdict
+
     hoy = datetime.now()
     conn = get_connection()
     cursor = conn.cursor()
@@ -234,18 +228,17 @@ def resumen():
     labels_anual, valores_anual = [], []
 
     if anio and mes:
-    # Gráfico mensual: consumo diario en ese mes y año
+        # Gráfico mensual: consumo diario en ese mes y año
         cursor.execute("""
-        SELECT TO_CHAR(fecha, 'DD'), SUM(consumo)
-        FROM ingresos_agua
-        WHERE usuario_id = :1 AND EXTRACT(YEAR FROM fecha) = :2 AND EXTRACT(MONTH FROM fecha) = :3
-        GROUP BY TO_CHAR(fecha, 'DD')
-        ORDER BY TO_CHAR(fecha, 'DD')
+            SELECT TO_CHAR(fecha, 'DD'), SUM(consumo)
+            FROM ingresos_agua
+            WHERE usuario_id = :1 AND EXTRACT(YEAR FROM fecha) = :2 AND EXTRACT(MONTH FROM fecha) = :3
+            GROUP BY TO_CHAR(fecha, 'DD')
+            ORDER BY TO_CHAR(fecha, 'DD')
         """, [session["usuario_id"], anio, mes])
         datos = cursor.fetchall()
-        labels_mensual = [str(int(d[0])) for d in datos]  # ← Días como números
+        labels_mensual = [str(int(d[0])) for d in datos]
         valores_mensual = [float(d[1]) for d in datos]
-
 
     elif anio and not mes:
         # Gráfico anual: consumo por mes en ese año
@@ -285,7 +278,27 @@ def resumen():
         datos = cursor.fetchall()
         labels_anual = [str(int(d[0])) for d in datos]
         valores_anual = [float(d[1]) for d in datos]
-        mes = hoy.month  # para mostrar en el título
+        mes = hoy.month
+
+    # ✅ Lecturas con foto agrupadas por mes
+    cursor.execute("""
+        SELECT TO_CHAR(fecha, 'YYYY-MM-DD'), consumo, monto, foto
+        FROM ingresos_agua
+        WHERE usuario_id = :1
+        ORDER BY fecha DESC
+    """, [session["usuario_id"]])
+    resultados = cursor.fetchall()
+
+    lecturas_por_mes = defaultdict(list)
+    for fecha_str, consumo, monto, foto in resultados:
+        fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+        mes_key = fecha.strftime("%B %Y")  # Ej: "Noviembre 2025"
+        lecturas_por_mes[mes_key].append({
+            "fecha": fecha_str,
+            "consumo": consumo,
+            "monto": monto,
+            "foto": foto
+        })
 
     if not labels_mensual and not labels_anual:
         flash("No hay datos para el filtro seleccionado.", "warning")
@@ -293,21 +306,18 @@ def resumen():
     cursor.close()
     conn.close()
 
-    return render_template("base.html",
-    vista="resumen",
-    año_seleccionado=anio,
-    mes_seleccionado=mes,
-    años_disponibles=años_disponibles,
-    labels_mensual=labels_mensual,
-    valores_mensual=valores_mensual,
-    labels_anual=labels_anual,
-    valores_anual=valores_anual
-)
-
-from collections import defaultdict
-from statistics import mean
-from datetime import date
-
+    return render_template(
+        "base.html",
+        vista="resumen",
+        año_seleccionado=anio,
+        mes_seleccionado=mes,
+        años_disponibles=años_disponibles,
+        labels_mensual=labels_mensual,
+        valores_mensual=valores_mensual,
+        labels_anual=labels_anual,
+        valores_anual=valores_anual,
+        lecturas_por_mes=lecturas_por_mes
+    )
 @app.route('/dashboard')
 def dashboard():
     if 'usuario_id' not in session:

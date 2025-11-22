@@ -16,36 +16,93 @@
   <style>
     .dark-mode {
       background-color: #121212;
-      color: #f0f0f0;
+      color: #e0e0e0; /* texto principal más claro */
     }
 
+    /* Títulos */
+    .dark-mode h1, 
+    .dark-mode h2, 
+    .dark-mode h3, 
+    .dark-mode h4, 
+    .dark-mode h5, 
+    .dark-mode h6 {
+      color: #4da6ff; /* títulos en azul claro */
+    }
+
+    /* Enlaces */
+    .dark-mode a {
+      color: #66ccff;
+    }
+
+    /* Navbar */
     .dark-mode .navbar {
       background-color: #1f1f1f !important;
     }
 
+    /* Botones */
     .dark-mode .btn-outline-light {
       border-color: #f0f0f0;
       color: #f0f0f0;
     }
 
-    .dark-mode .card,
-    .dark-mode .table,
+    .dark-mode .btn-primary {
+      background-color: #4da6ff;
+      border-color: #4da6ff;
+      color: #121212;
+    }
+
+    .dark-mode .btn-primary:hover {
+      background-color: #66ccff;
+      border-color: #66ccff;
+      color: #121212;
+    }
+
+    /* Formularios */
+    .dark-mode .form-label {
+      color: #4da6ff !important;   /* azul claro para máxima legibilidad */
+      font-weight: 600 !important; /* más grueso para destacar */
+      letter-spacing: 0.5px;
+    }
+
     .dark-mode .form-control {
-      background-color: #1e1e1e;
-      color: #f0f0f0;
+      background-color: #1e1e1e !important;
+      color: #e0e0e0 !important;
+      border: 1px solid #4da6ff !important;
+    }
+
+    .dark-mode .form-control:focus {
+      background-color: #1e1e1e !important;
+      color: #ffffff !important;
+      border-color: #66ccff !important;
+      box-shadow: 0 0 0 0.2rem rgba(102, 204, 255, 0.25);
     }
 
     .dark-mode .form-control::placeholder {
-      color: #ccc;
+      color: #aaaaaa !important;
     }
 
+    /* Cards y tablas */
+    .dark-mode .card,
+    .dark-mode .table {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      border: 1px solid #333333;
+    }
+
+    /* Dropdown */
     .dark-mode .dropdown-menu {
       background-color: #2a2a2a;
-      color: #f0f0f0;
+      color: #e0e0e0;
     }
 
     .dark-mode .dropdown-item:hover {
       background-color: #3a3a3a;
+    }
+
+    /* Texto secundario */
+    .dark-mode nav, 
+    .dark-mode footer {
+      color: #cccccc;
     }
   </style>
 </head>
@@ -98,8 +155,8 @@
     {% elif vista == 'admin_tarifas' %}
       {% include 'vistas/admin_tarifas.html' %}
       {% if session['usuario_rol'] == 'admin' %}
-  <span class="badge bg-warning text-dark ms-2">👑 Administrador</span>
-{% endif %}
+        <span class="badge bg-warning text-dark ms-2">👑 Administrador</span>
+      {% endif %}
     {% endif %}
   {% endblock %}
 </div>
