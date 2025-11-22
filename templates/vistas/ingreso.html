@@ -20,7 +20,7 @@
     {% endif %}
 
     <!-- Formulario de ingreso -->
-    <form method="post" id="ingresoForm" novalidate>
+    <form method="post" id="ingresoForm" enctype="multipart/form-data" novalidate>
       <!-- Dirección mostrada automáticamente -->
       <div class="mb-3">
         <label class="form-label"><i class="fa-solid fa-location-dot"></i> Dirección registrada</label>
@@ -38,6 +38,13 @@
       <div class="mb-3">
         <label class="form-label"><i class="fa-solid fa-calendar-day"></i> Fecha</label>
         <input type="date" name="fecha1" class="form-control" value="{{ fecha_actual }}" readonly>
+      </div>
+
+      <!-- Fotografía de la lectura -->
+      <div class="mb-3">
+        <label for="foto" class="form-label"><i class="fa-solid fa-camera"></i> Fotografía de la lectura</label>
+        <input type="file" class="form-control" id="foto" name="foto" accept="image/*" capture="environment">
+        <small class="text-muted">Puedes tomar una foto con la cámara del celular para validar la lectura.</small>
       </div>
 
       <button type="submit" class="btn btn-primary w-100">
