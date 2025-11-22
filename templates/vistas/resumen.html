@@ -1,5 +1,6 @@
 {% if vista == 'resumen' %} {# inicio resumen #}
 <h2 class="text-center mb-4">Resumen de consumo</h2>
+
 <!-- Filtros -->
 <form method="post" class="row g-2 justify-content-center mb-4">
   <div class="col-auto">
@@ -22,12 +23,14 @@
     <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-filter"></i> Filtrar</button>
   </div>
 </form>
+
 <!-- Mensajes flash -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% for category, message in messages %}
     <div class="alert alert-{{ category }} text-center">{{ message }}</div>
   {% endfor %}
 {% endwith %}
+
 <!-- Botón de exportación -->
 <form method="post" action="/exportar_resumen">
   <input type="hidden" name="año" value="{{ año_seleccionado }}">
@@ -36,12 +39,14 @@
     <i class="fa-solid fa-file-excel"></i> Exportar resumen a Excel
   </button>
 </form>
+
 <!-- Mensaje si no hay datos -->
 {% if not labels_mensual and not labels_anual %}
   <div class="alert alert-warning text-center">
     No hay datos disponibles para los filtros seleccionados.
   </div>
 {% endif %}
+
 <!-- Gráfico mensual -->
 {% if labels_mensual %}
   <h5 class="text-center">
@@ -54,6 +59,7 @@
     </button>
   </div>
 {% endif %}
+
 <!-- Gráfico anual -->
 {% if labels_anual %}
   <h5 class="text-center">
@@ -72,8 +78,36 @@
     </button>
   </div>
 {% endif %}
+
+<!-- Lecturas agrupadas por mes con link de descarga -->
+{% if lecturas_por_mes %}
+  <hr>
+  <h4 class="text-center mt-4">Detalle de lecturas por mes</h4>
+  {% for mes, lecturas_mes in lecturas_por_mes.items() %}
+    <h5 class="mt-3"><i class="fa-solid fa-calendar"></i> {{ mes }}</h5>
+    <ul class="list-group mb-3">
+      {% for lectura in lecturas_mes %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>
+            <i class="fa-solid fa-calendar-day"></i> {{ lectura.fecha }} — {{ lectura.consumo }} m³ — ${{ lectura.monto }}
+          </span>
+          {% if lectura.foto %}
+            <a href="{{ url_for('static', filename='uploads/lecturas/' ~ lectura.foto) }}"
+               class="btn btn-sm btn-outline-primary" download>
+              <i class="fa-solid fa-download"></i> Descargar foto
+            </a>
+          {% else %}
+            <span class="text-muted">Sin foto</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+{% endif %}
+
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- Script de descarga -->
 <script>
   function descargarGrafico(idCanvas, nombreArchivo) {
@@ -84,11 +118,12 @@
     link.click();
   }
 </script>
+
 <!-- Script gráfico mensual -->
 {% if labels_mensual is defined %}
 <script>
-  const labelsMensual = {{ labels_mensual | tojson | safe }};  // Ej: ["3", "7", "15"]
-  const datosMensual = {{ valores_mensual | tojson | safe }};  // Ej: [12.5, 8.3, 15.0]
+  const labelsMensual = {{ labels_mensual | tojson | safe }};
+  const datosMensual = {{ valores_mensual | tojson | safe }};
 
   if (labelsMensual.length) {
     new Chart(document.getElementById('graficoMensual'), {
@@ -120,20 +155,12 @@
         },
         scales: {
           x: {
-            title: {
-              display: true,
-              text: 'Día del mes'
-            },
-            ticks: {
-              precision: 0
-            }
+            title: { display: true, text: 'Día del mes' },
+            ticks: { precision: 0 }
           },
           y: {
             beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Consumo (m³)'
-            }
+            title: { display: true, text: 'Consumo (m³)' }
           }
         }
       }
@@ -141,74 +168,64 @@
   }
 </script>
 {% endif %}
+
 <!-- Script gráfico anual -->
-  {% if labels_anual is defined %}
-  <script>
-    const labelsAnual = {{ labels_anual | tojson | safe }};
-    const datosAnual = {{ valores_anual | tojson | safe }};
-    if (labelsAnual.length) {
-      new Chart(document.getElementById('graficoAnual'), {
-        type: 'bar',
-        data: {
-          labels: labelsAnual,
-          datasets: [{
-            label: 'Consumo anual (m³)',
-            data: datosAnual,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            borderRadius: 5,
-            hoverBackgroundColor: 'rgba(75, 192, 192, 0.8)',
-            hoverBorderColor: 'rgba(75, 192, 192, 1)'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              display: true,
-              labels: {
-                color: '#333',
-                font: {
-                  size: 14,
-                  weight: 'bold'
-                }
-              }
-            },
-            tooltip: {
-              backgroundColor: '#f5f5f5',
-              titleColor: '#333',
-              bodyColor: '#000',
-              borderColor: '#ccc',
-              borderWidth: 1
+{% if labels_anual is defined %}
+<script>
+  const labelsAnual = {{ labels_anual | tojson | safe }};
+  const datosAnual = {{ valores_anual | tojson | safe }};
+  if (labelsAnual.length) {
+    new Chart(document.getElementById('graficoAnual'), {
+      type: 'bar',
+      data: {
+        labels: labelsAnual,
+        datasets: [{
+          label: 'Consumo anual (m³)',
+          data: datosAnual,
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          borderRadius: 5,
+          hoverBackgroundColor: 'rgba(75, 192, 192, 0.8)',
+          hoverBorderColor: 'rgba(75, 192, 192, 1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: '#333',
+              font: { size: 14, weight: 'bold' }
             }
           },
-          scales: {
-            x: {
-              ticks: {
-                color: '#333',
-                font: { size: 12 }
-              },
+          tooltip: {
+            backgroundColor: '#f5f5f5',
+            titleColor: '#333',
+            bodyColor: '#000',
+            borderColor: '#ccc',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#333', font: { size: 12 } },
             grid: { display: false }
           },
           y: {
             beginAtZero: true,
-            ticks: {
-              color: '#333',
-              font: { size: 12 }
-            },
-              grid: {
-                color: 'rgba(200, 200, 200, 0.2)'
-              }
-            }
-          },
-          animation: {
-            duration: 1000,
-            easing: 'easeOutBounce'
+            ticks: { color: '#333', font: { size: 12 } },
+            grid: { color: 'rgba(200, 200, 200, 0.2)' }
           }
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutBounce'
         }
-      });
-    }
-  </script>
-{% endif %}  {# cierre de vista == 'resumen' #}
+      }
+    });
+  }
+</script>
+{% endif %} {# cierre de vista == 'resumen' #}
 {% endif %} {# cierre de vista == 'resumen' #}
