@@ -113,6 +113,12 @@ from flask import render_template, request, redirect, session, flash
 from db_config import get_connection
 from utils import validar_consumo, obtener_ingreso_usuario
 
+from werkzeug.utils import secure_filename
+import cv2
+import pytesseract
+import re
+import os
+
 @app.route('/ingreso', methods=['GET', 'POST'])
 def ingreso():
     if 'usuario_id' not in session:
@@ -171,13 +177,33 @@ def ingreso():
         # ✅ Procesar fotografía (si se subió)
         foto = request.files.get('foto')
         nombre_foto = None
+        lectura_foto = None
         if foto and foto.filename != '':
-            # Carpeta de subida (asegúrate de crearla en tu proyecto)
             upload_folder = os.path.join("uploads", "lecturas")
             os.makedirs(upload_folder, exist_ok=True)
 
-            nombre_foto = f"{session['usuario_id']}_{fecha_hoy}_{foto.filename}"
-            foto.save(os.path.join(upload_folder, nombre_foto))
+            nombre_foto = f"{session['usuario_id']}_{fecha_hoy}_{secure_filename(foto.filename)}"
+            ruta_foto = os.path.join(upload_folder, nombre_foto)
+            foto.save(ruta_foto)
+
+            # OCR con OpenCV + Tesseract
+            img = cv2.imread(ruta_foto)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+            texto = pytesseract.image_to_string(thresh, config='--psm 6')
+
+            numeros = re.findall(r'\d+', texto)
+            if numeros:
+                lectura_foto = int(numeros[0])
+
+        # ✅ Comparación automática con tolerancia de 2 m³
+        if lectura_foto is not None:
+            if abs(lectura_actual - lectura_foto) <= 2:
+                flash(f"✅ Confirmación: la lectura manual ({lectura_actual} m³) coincide con la foto ({lectura_foto} m³).", "success")
+            else:
+                flash(f"⚠️ Diferencia detectada: manual {lectura_actual} m³ vs foto {lectura_foto} m³.", "warning")
+        elif foto and foto.filename != '':
+            flash("⚠️ No se pudo leer correctamente la foto del medidor.", "error")
 
         # ✅ Insertar ingreso con lectura, consumo, monto y foto
         cursor.execute("""
@@ -193,7 +219,6 @@ def ingreso():
             direccion_usuario = direccion_form
 
         conn.commit()
-        flash(f"✅ Lectura registrada. Consumo: {consumo} m³. Monto a pagar: ${monto:,}", "success")
         cursor.close()
         conn.close()
         return redirect('/pago')
