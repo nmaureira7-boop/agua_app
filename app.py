@@ -168,11 +168,22 @@ def ingreso():
         # ✅ Dirección ingresada (si se modificó)
         direccion_form = request.form.get('direccion1') or direccion_usuario
 
-        # ✅ Insertar ingreso con lectura, consumo y monto
+        # ✅ Procesar fotografía (si se subió)
+        foto = request.files.get('foto')
+        nombre_foto = None
+        if foto and foto.filename != '':
+            # Carpeta de subida (asegúrate de crearla en tu proyecto)
+            upload_folder = os.path.join("uploads", "lecturas")
+            os.makedirs(upload_folder, exist_ok=True)
+
+            nombre_foto = f"{session['usuario_id']}_{fecha_hoy}_{foto.filename}"
+            foto.save(os.path.join(upload_folder, nombre_foto))
+
+        # ✅ Insertar ingreso con lectura, consumo, monto y foto
         cursor.execute("""
-            INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha)
-            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'))
-        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy])
+            INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha, foto)
+            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'), :6)
+        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy, nombre_foto])
 
         # ✅ Actualizar dirección si cambió
         if direccion_form != direccion_usuario:
@@ -197,7 +208,6 @@ def ingreso():
         fecha_actual=fecha_hoy,
         lectura_hoy=mostrar_advertencia
     )
-@app.route("/resumen", methods=["GET", "POST"])
 def resumen():
     if 'usuario_id' not in session:
         return redirect('/login')
