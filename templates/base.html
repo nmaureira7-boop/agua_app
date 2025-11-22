@@ -16,7 +16,20 @@
   <style>
     .dark-mode {
       background-color: #121212;
-      color: #f0f0f0;
+      color: #e0e0e0; /* texto principal más claro */
+    }
+
+    .dark-mode h1, 
+    .dark-mode h2, 
+    .dark-mode h3, 
+    .dark-mode h4, 
+    .dark-mode h5, 
+    .dark-mode h6 {
+      color: #4da6ff; /* títulos en azul claro */
+    }
+
+    .dark-mode a {
+      color: #66ccff; /* enlaces en celeste */
     }
 
     .dark-mode .navbar {
@@ -32,20 +45,25 @@
     .dark-mode .table,
     .dark-mode .form-control {
       background-color: #1e1e1e;
-      color: #f0f0f0;
+      color: #e0e0e0;
     }
 
     .dark-mode .form-control::placeholder {
-      color: #ccc;
+      color: #cccccc;
     }
 
     .dark-mode .dropdown-menu {
       background-color: #2a2a2a;
-      color: #f0f0f0;
+      color: #e0e0e0;
     }
 
     .dark-mode .dropdown-item:hover {
       background-color: #3a3a3a;
+    }
+
+    .dark-mode nav, 
+    .dark-mode footer {
+      color: #cccccc; /* texto secundario */
     }
   </style>
 </head>
@@ -98,8 +116,8 @@
     {% elif vista == 'admin_tarifas' %}
       {% include 'vistas/admin_tarifas.html' %}
       {% if session['usuario_rol'] == 'admin' %}
-  <span class="badge bg-warning text-dark ms-2">👑 Administrador</span>
-{% endif %}
+        <span class="badge bg-warning text-dark ms-2">👑 Administrador</span>
+      {% endif %}
     {% endif %}
   {% endblock %}
 </div>
