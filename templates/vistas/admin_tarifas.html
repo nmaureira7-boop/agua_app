@@ -13,8 +13,8 @@
     </thead>
     <tbody>
       {% for tramo in tramos %}
-        <form method="post" action="/admin/tarifas/editar/{{ tramo[0] }}">
-          <tr>
+        <tr>
+          <form method="post" action="/admin/tarifas/editar/{{ tramo[0] }}">
             <td>
               <input type="number" name="desde" class="form-control" value="{{ tramo[1] }}" required>
             </td>
@@ -25,16 +25,20 @@
             <td>
               <input type="number" name="precio" class="form-control" value="{{ tramo[3] }}" required>
             </td>
-            <td class="text-center">
+            <td class="text-center d-flex justify-content-center">
               <button type="submit" class="btn btn-sm btn-primary me-2">
                 <i class="fa-solid fa-floppy-disk"></i> Guardar
               </button>
-              <a href="/admin/tarifas/eliminar/{{ tramo[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este tramo?')">
-                <i class="fa-solid fa-trash"></i> Eliminar
-              </a>
-            </td>
-          </tr>
-        </form>
+          </form>
+
+          <!-- Formulario POST para eliminar -->
+          <form method="post" action="/admin/tarifas/eliminar/{{ tramo[0] }}" onsubmit="return confirm('¿Eliminar este tramo?')">
+            <button type="submit" class="btn btn-sm btn-danger">
+              <i class="fa-solid fa-trash"></i> Eliminar
+            </button>
+          </form>
+          </td>
+        </tr>
       {% endfor %}
     </tbody>
   </table>

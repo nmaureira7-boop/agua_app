@@ -34,10 +34,14 @@
         <div class="invalid-feedback">Ingresa una lectura válida.</div>
       </div>
 
-      <!-- Fecha automática -->
+      <!-- Fecha editable solo para administrador -->
       <div class="mb-3">
         <label class="form-label"><i class="fa-solid fa-calendar-day"></i> Fecha</label>
-        <input type="date" name="fecha1" class="form-control" value="{{ fecha_actual }}" readonly>
+        {% if session['correo'] == 'admin@aguas.cl' %}
+          <input type="date" name="fecha1" class="form-control" value="{{ fecha_actual }}">
+        {% else %}
+          <input type="date" name="fecha1" class="form-control" value="{{ fecha_actual }}" readonly>
+        {% endif %}
       </div>
 
       <button type="submit" class="btn btn-primary w-100">

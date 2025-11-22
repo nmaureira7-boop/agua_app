@@ -44,7 +44,6 @@ def registro():
         contraseña = request.form['contraseña']
         confirmar = request.form['confirmar_contraseña']
 
-        # Validar que las contraseñas coincidan
         if contraseña != confirmar:
             flash("⚠️ Las contraseñas no coinciden.", "warning")
             return redirect('/registro')
@@ -113,6 +112,7 @@ from flask import render_template, request, redirect, session, flash
 from db_config import get_connection
 from utils import validar_consumo, obtener_ingreso_usuario
 
+
 @app.route('/ingreso', methods=['GET', 'POST'])
 def ingreso():
     if 'usuario_id' not in session:
@@ -122,9 +122,10 @@ def ingreso():
     cursor = conn.cursor()
 
     # ✅ Obtener dirección actual del usuario
-    cursor.execute("SELECT direccion FROM usuarios WHERE id = :1", [session['usuario_id']])
+    cursor.execute("SELECT direccion, correo FROM usuarios WHERE id = :1", [session['usuario_id']])
     resultado_direccion = cursor.fetchone()
     direccion_usuario = resultado_direccion[0] if resultado_direccion and resultado_direccion[0] else ''
+    correo_usuario = resultado_direccion[1] if resultado_direccion else ''
 
     # ✅ Fecha actual
     fecha_hoy = datetime.now().strftime('%Y-%m-%d')
@@ -139,7 +140,9 @@ def ingreso():
 
     if request.method == 'POST':
         try:
-            lectura_actual = int(request.form.get('lectura_m3'))
+            lectura_actual = float(request.form.get('lectura_m3'))
+            if lectura_actual < 0:
+                raise ValueError("Lectura negativa")
         except (TypeError, ValueError):
             flash("⚠️ La lectura ingresada no es válida.", "error")
             cursor.close()
@@ -168,11 +171,18 @@ def ingreso():
         # ✅ Dirección ingresada (si se modificó)
         direccion_form = request.form.get('direccion1') or direccion_usuario
 
-        # ✅ Insertar ingreso con lectura, consumo y monto
+        # ✅ Fecha ingresada (solo si es admin)
+        fecha_form = request.form.get('fecha1')
+        if correo_usuario == 'admin@aguas.cl' and fecha_form:
+            fecha_ingreso = fecha_form
+        else:
+            fecha_ingreso = fecha_hoy
+
+        # ✅ Insertar ingreso
         cursor.execute("""
             INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha)
             VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'))
-        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy])
+        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_ingreso])
 
         # ✅ Actualizar dirección si cambió
         if direccion_form != direccion_usuario:
@@ -426,55 +436,80 @@ def pago():
         fecha=fecha_lectura,
         resumen_ingresos=resumen_ingresos
     )
-@app.route('/editar_ingreso', methods=['GET', 'POST'])
-def editar_ingreso_manual():
+@app.route('/editar_ingreso/<int:ingreso_id>', methods=['GET', 'POST'])
+def editar_ingreso_manual(ingreso_id):
     if 'usuario_id' not in session:
         return redirect('/login')
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Buscar ingreso existente
-    cursor.execute("""
-        SELECT id, direccion, consumo, TO_CHAR(fecha, 'YYYY-MM-DD')
-        FROM ingresos_agua
-        WHERE usuario_id = :1
-        FETCH FIRST 1 ROWS ONLY
-    """, [session['usuario_id']])
+    # Verificar si el usuario es admin
+    es_admin = session.get('correo') == 'admin@aguas.cl'
+
+    # Buscar ingreso por ID
+    if es_admin:
+        cursor.execute("""
+            SELECT id, direccion, consumo, TO_CHAR(fecha, 'YYYY-MM-DD'), usuario_id
+            FROM ingresos_agua
+            WHERE id = :1
+        """, [ingreso_id])
+    else:
+        cursor.execute("""
+            SELECT id, direccion, consumo, TO_CHAR(fecha, 'YYYY-MM-DD'), usuario_id
+            FROM ingresos_agua
+            WHERE id = :1 AND usuario_id = :2
+        """, [ingreso_id, session['usuario_id']])
+
     ingreso = cursor.fetchone()
 
     if not ingreso:
         cursor.close()
         conn.close()
-        flash("No tienes ningún ingreso registrado para editar.", "warning")
-        return redirect('/ingreso')
+        flash("❌ No tienes permiso para editar este ingreso o no existe.", "danger")
+        return redirect('/dashboard')
 
     if request.method == 'POST':
         direccion = request.form.get('direccion')
         consumo = request.form.get('consumo')
         fecha = request.form.get('fecha')
 
-        if direccion and consumo and fecha:
-            try:
-                consumo = float(consumo)
-                if consumo < 0:
-                    raise ValueError("Consumo negativo")
-            except (ValueError, TypeError):
-                flash("⚠️ El consumo debe ser un número válido y positivo.", "error")
-                return redirect('/editar_ingreso')
+        if not direccion or not consumo or not fecha:
+            flash("⚠️ Todos los campos son obligatorios.", "warning")
+            return redirect(f'/editar_ingreso/{ingreso_id}')
 
-            cursor.execute("""
-                UPDATE ingresos_agua
-                SET direccion = :1, consumo = :2, fecha = TO_DATE(:3, 'YYYY-MM-DD')
-                WHERE id = :4 AND usuario_id = :5
-            """, [direccion, consumo, fecha, ingreso[0], session['usuario_id']])
-            conn.commit()
-            flash("Ingreso actualizado correctamente.", "success")
-            return redirect('/ingreso')
+        try:
+            consumo = float(consumo)
+            if consumo < 0:
+                raise ValueError("Consumo negativo")
+        except (ValueError, TypeError):
+            flash("⚠️ El consumo debe ser un número válido y positivo.", "warning")
+            return redirect(f'/editar_ingreso/{ingreso_id}')
+
+        try:
+            # Validar formato de fecha
+            datetime.strptime(fecha, '%Y-%m-%d')
+        except ValueError:
+            flash("⚠️ La fecha ingresada no tiene un formato válido.", "warning")
+            return redirect(f'/editar_ingreso/{ingreso_id}')
+
+        cursor.execute("""
+            UPDATE ingresos_agua
+            SET direccion = :1,
+                consumo = :2,
+                fecha = TO_DATE(:3, 'YYYY-MM-DD')
+            WHERE id = :4 AND usuario_id = :5
+        """, [direccion, consumo, fecha, ingreso_id, ingreso[4]])
+
+        conn.commit()
+        flash("✅ Ingreso actualizado correctamente.", "success")
+        cursor.close()
+        conn.close()
+        return redirect('/dashboard' if es_admin else '/ingreso')
 
     cursor.close()
     conn.close()
-    return render_template('base.html', vista='editar_ingreso', ingreso=ingreso)
+    return render_template('editar_ingreso.html', ingreso=ingreso)
 @app.route('/eliminar_ingreso/<int:ingreso_id>', methods=['POST'])
 def eliminar_ingreso(ingreso_id):
     if 'usuario_id' not in session:
@@ -717,6 +752,27 @@ def mostrar_formulario_edicion(ingreso_id):
 @app.route('/prueba')
 def prueba():
     return "Ruta de prueba activa"
+
+@app.route('/editar_fecha/<int:ingreso_id>', methods=['GET', 'POST'])
+def editar_fecha_ingreso(ingreso_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        nueva_fecha = request.form['nueva_fecha']
+        cursor.execute("""
+            UPDATE ingresos
+            SET fecha_ingreso = TO_DATE(:1, 'YYYY-MM-DD')
+            WHERE id = :2
+        """, (nueva_fecha, ingreso_id))
+        conn.commit()
+        flash("✅ Fecha actualizada correctamente", "success")
+        return redirect('/dashboard')
+
+    # Obtener datos actuales
+    cursor.execute("SELECT id, fecha_ingreso FROM ingresos WHERE id = :1", (ingreso_id,))
+    ingreso = cursor.fetchone()
+    return render_template('editar_fecha.html', ingreso=ingreso)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -15,7 +15,7 @@
     {% endwith %}
 
     <!-- Formulario con acción explícita -->
-    <form method="POST" action="{{ url_for('editar_tramo', tramo_id=tramo.id) }}" novalidate>
+    <form method="POST" action="{{ url_for('editar_ingreso_manual', ingreso_id=ingreso[0]) }}" novalidate>
       <div class="mb-3">
         <label for="direccion" class="form-label">
           <i class="fa-solid fa-location-dot"></i> Dirección
@@ -32,9 +32,10 @@
 
       <div class="mb-3">
         <label for="fecha" class="form-label">
-          <i class="fa-solid fa-calendar-day"></i> Fecha
+          <i class="fa-solid fa-calendar-day"></i> Fecha de ingreso
         </label>
-        <input type="date" class="form-control" name="fecha" id="fecha" value="{{ ingreso[3] }}" required>
+        <input type="date" class="form-control" name="fecha" id="fecha"
+               value="{{ ingreso[3]|default('', true) }}" required>
       </div>
 
       <button type="submit" class="btn btn-success w-100">

@@ -1,35 +1,35 @@
-<div class="card bg-light mb-4">
-  <div class="card-header">
-    <h5><i class="fa-solid fa-money-bill-wave"></i> Confirmar pago</h5>
+  <div class="card bg-light mb-4">
+    <div class="card-header">
+      <h5><i class="fa-solid fa-money-bill-wave"></i> Confirmar pago</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>Dirección:</strong> {{ direccion }}</p>
+      <p><strong>Fecha de lectura:</strong> {{ fecha }}</p>
+      <p><strong>Consumo registrado:</strong> {{ consumo }} m³</p>
+      <p><strong>Monto a pagar:</strong> ${{ monto | round(0) }}</p>
+
+      <form method="POST">
+        <button type="submit" class="btn btn-success w-100">
+          <i class="fa-solid fa-circle-check"></i> Confirmar y pagar
+        </button>
+      </form>
+    </div>
   </div>
-  <div class="card-body">
-    <p><strong>Dirección:</strong> {{ direccion }}</p>
-    <p><strong>Fecha de lectura:</strong> {{ fecha }}</p>
-    <p><strong>Consumo registrado:</strong> {{ consumo }} m³</p>
-    <p><strong>Monto a pagar:</strong> ${{ monto | round(0) }}</p>
 
-    <form method="POST">
-      <button type="submit" class="btn btn-success w-100">
-        <i class="fa-solid fa-circle-check"></i> Confirmar y pagar
-      </button>
-    </form>
-  </div>
-</div>
+  <hr>
 
-<hr>
-
-<h5 class="mt-4 text-center">Resumen de ingresos</h5>
-<ul class="list-group">
-  {% for ingreso in resumen_ingresos %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      <div>
-        <strong>{{ ingreso.fecha }}</strong> — {{ ingreso.direccion }} — {{ ingreso.consumo }} m³
-      </div>
-      {% if ingreso.estado == 'pagado' %}
-        <span class="badge bg-success">Pagado (${{ ingreso.monto | round(0) }})</span>
-      {% else %}
-        <span class="badge bg-warning text-dark">Pendiente</span>
-      {% endif %}
-    </li>
-  {% endfor %}
-</ul>
+  <h5 class="mt-4 text-center">Resumen de ingresos</h5>
+  <ul class="list-group">
+    {% for ingreso in resumen_ingresos %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ ingreso.fecha }}</strong> — {{ ingreso.direccion }} — {{ ingreso.consumo }} m³
+        </div>
+        {% if ingreso.estado == 'pagado' %}
+          <span class="badge bg-success">Pagado (${{ ingreso.monto | round(0) }})</span>
+        {% else %}
+          <span class="badge bg-warning text-dark">Pendiente</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
