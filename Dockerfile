@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Dependencias para OpenCV + Tesseract
+# Dependencias para OpenCV + Tesseract + Redis client
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
@@ -9,22 +9,26 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     libaio-dev \
+    redis-tools \
     && apt-get clean
 
-# Render coloca tu proyecto en /opt/render/project/src
-# Usamos la misma ruta para evitar problemas con wallet
+# Directorio de trabajo (Render usa esta ruta)
 WORKDIR /opt/render/project/src
 
 # Copiar requirements
 COPY requirements.txt .
 
+# Instalar dependencias Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar TODO el proyecto (incluye wallet/)
+# Copiar TODO el proyecto (incluye wallet/, start.sh, etc.)
 COPY . .
 
-# Exponer puerto
+# Dar permisos de ejecución al script de arranque
+RUN chmod +x start.sh
+
+# Exponer puerto de Flask/Gunicorn
 EXPOSE 5000
 
-# Iniciar servidor
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:5000"]
+# Usar el script de arranque para levantar Redis + Gunicorn + Celery
+CMD ["./start.sh"]
