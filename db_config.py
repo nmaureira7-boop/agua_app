@@ -24,8 +24,7 @@ def get_connection():
             dsn=dsn,
             config_dir=wallet_path,
             wallet_location=wallet_path,
-            wallet_password=os.getenv("WALLET_PASS"),
-            thin=True
+            wallet_password=os.getenv("WALLET_PASS")
         )
     except Exception as e:
         print("Error al conectar a Oracle:", e)
