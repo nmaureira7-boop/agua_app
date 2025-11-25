@@ -22,3 +22,9 @@ xlsxwriter==3.2.9
 gunicorn==21.2.0
 opencv-python
 pytesseract
+flask
+gunicorn
+celery
+redis
+pillow
+piexif
