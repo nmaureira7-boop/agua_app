@@ -1,4 +1,5 @@
-blinker1.9.0 cffi2.0.0 
+blinker1.9.0 
+cffi2.0.0 
 click8.3.0 
 colorama0.4.6 
 cryptography46.0.3 
@@ -12,7 +13,8 @@ pandas2.3.3
 pycparser2.23 
 python-dateutil2.9.0.post0 
 python-dotenv1.2.1 
-pytz2025.2 six1.17.0 
+pytz2025.2 
+six1.17.0 
 typing_extensions4.15.0 
 tzdata2025.2 
 Werkzeug3.1.3 
