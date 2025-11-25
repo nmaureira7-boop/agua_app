@@ -7,7 +7,7 @@ import oracledb
 import io
 from collections import defaultdict
 from statistics import mean
-from datetime import datetime
+from datetime import date
 from utils import obtener_ingreso_usuario
 from utils import validar_consumo
 from dotenv import load_dotenv
