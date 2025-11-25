@@ -13,6 +13,11 @@ from utils import validar_consumo
 from dotenv import load_dotenv
 import os
 from flask import Flask
+from flask import Flask, request, jsonify
+from celery import Celery
+import piexif
+from PIL import Image
+
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta'  # Necesaria para usar sesiones y flash
@@ -772,6 +777,43 @@ def mostrar_formulario_edicion(ingreso_id):
 @app.route('/prueba')
 def prueba():
     return "Ruta de prueba activa"
+
+# Configuración Celery (usando Redis como broker)
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+
+# Tarea pesada: análisis de fraude de imágenes
+@celery.task
+def analizar_imagen(path):
+    try:
+        img = Image.open(path)
+        exif_data = img.info.get("exif")
+        if not exif_data:
+            return {"fraude": True, "motivo": "Sin metadatos EXIF"}
+        # Aquí puedes agregar lógica de hashing, watermarking, etc.
+        return {"fraude": False, "motivo": "Imagen válida"}
+    except Exception as e:
+        return {"fraude": True, "motivo": str(e)}
+
+@app.route("/validar_imagen", methods=["POST"])
+def validar_imagen():
+    path = request.json.get("path")
+    tarea = analizar_imagen.delay(path)  # Ejecuta en segundo plano
+    return jsonify({"task_id": tarea.id}), 202
+
+@app.route("/resultado/<task_id>")
+def resultado(task_id):
+    tarea = analizar_imagen.AsyncResult(task_id)
+    if tarea.state == "PENDING":
+        return jsonify({"estado": "pendiente"})
+    elif tarea.state == "SUCCESS":
+        return jsonify(tarea.result)
+    else:
+        return jsonify({"estado": tarea.state})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
