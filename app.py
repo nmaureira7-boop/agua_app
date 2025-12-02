@@ -796,7 +796,7 @@ def admin_dashboard():
         for row in registros
     ]
 
-    return render_template('admin_dashboard.html', ingresos=ingresos)
+    return render_template('vistas/admin_dashboard.html', ingresos=ingresos)
 
 @app.route('/admin/export')
 def admin_export():
