@@ -769,9 +769,9 @@ def admin_dashboard():
     # ✅ Obtener todos los ingresos con datos de usuario
     cursor.execute("""
         SELECT u.id, u.nombre, u.correo, u.direccion,
-               i.id, i.fecha, i.lectura_m3, i.consumo, i.monto, i.foto, i.estado_validacion
+               i.id, i.fecha, i.lectura_m3, i.consumo, i.monto, i.foto
         FROM ingresos_agua i
-        JOIN usuarios u ON i.usuario_id = u.id
+        LEFT JOIN usuarios u ON i.usuario_id = u.id
         ORDER BY i.fecha DESC
     """)
     registros = cursor.fetchall()
