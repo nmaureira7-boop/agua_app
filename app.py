@@ -1061,28 +1061,27 @@ def eliminar_tarifa(tarifa_id):
 
 @app.route('/admin/actualizar_ingreso/<int:ingreso_id>', methods=['POST'])
 def admin_actualizar_ingreso(ingreso_id):
-    # Aquí procesas el formulario de edición
-    fecha = request.form['fecha']
-    lectura = request.form['lectura']
-    consumo = request.form['consumo']
-    monto = request.form['monto']
-    estado = request.form['estado']
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
 
+    conn = get_connection()
     cursor = conn.cursor()
+
+    estado = request.form.get('estado')  # "aprobado" o "rechazado"
+
     cursor.execute("""
         UPDATE ingresos_agua
-        SET fecha = :fecha,
-            lectura_m3 = :lectura,
-            consumo = :consumo,
-            monto = :monto,
-            estado_validacion = :estado
-        WHERE id = :ingreso_id
-    """, [fecha, lectura, consumo, monto, estado, ingreso_id])
+        SET estado_validacion = :1
+        WHERE id = :2
+    """, [estado, ingreso_id])
+
     conn.commit()
     cursor.close()
+    conn.close()
 
-    flash("Ingreso actualizado correctamente", "success")
-    return redirect(url_for('admin_dashboard'))
+    flash("✅ Estado de ingreso actualizado.", "success")
+    return redirect('/admin/dashboard')
 
 
 if __name__ == '__main__':
