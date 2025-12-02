@@ -1042,5 +1042,31 @@ def eliminar_tarifa(tarifa_id):
     return redirect('/admin/tarifas')
 
 
+@app.route('/admin/actualizar_ingreso/<int:ingreso_id>', methods=['POST'])
+def admin_actualizar_ingreso(ingreso_id):
+    # Aquí procesas el formulario de edición
+    fecha = request.form['fecha']
+    lectura = request.form['lectura']
+    consumo = request.form['consumo']
+    monto = request.form['monto']
+    estado = request.form['estado']
+
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE ingresos_agua
+        SET fecha = :fecha,
+            lectura_m3 = :lectura,
+            consumo = :consumo,
+            monto = :monto,
+            estado_validacion = :estado
+        WHERE id = :ingreso_id
+    """, [fecha, lectura, consumo, monto, estado, ingreso_id])
+    conn.commit()
+    cursor.close()
+
+    flash("Ingreso actualizado correctamente", "success")
+    return redirect(url_for('admin_dashboard'))
+
+
 if __name__ == '__main__':
     app.run(debug=True)
