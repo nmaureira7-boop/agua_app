@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4"><i class="fa-solid fa-credit-card"></i> Historial de Pagos</h2>
+
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Usuario</th>
+        <th>Correo</th>
+        <th>Fecha de Pago</th>
+        <th>Consumo</th>
+        <th>Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pago in pagos %}
+      <tr>
+        <td>{{ pago[0] }}</td>
+        <td>{{ pago[1] }}</td>
+        <td>{{ pago[2] }}</td>
+        <td>{{ pago[3] }}</td>
+        <td>{{ pago[4] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
