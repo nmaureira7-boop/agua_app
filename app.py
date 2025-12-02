@@ -866,7 +866,7 @@ def admin_editar_ingreso(ingreso_id):
 
     cursor.close()
     conn.close()
-    return render_template('admin_editar_ingreso.html', ingreso=ingreso)
+    return render_template('vistas/admin_editar_ingreso.html', ingreso=ingreso)
 
 @app.route('/admin/eliminar_ingreso/<int:ingreso_id>', methods=['POST'])
 def admin_eliminar_ingreso(ingreso_id):
