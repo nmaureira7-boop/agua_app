@@ -22,3 +22,4 @@ xlsxwriter==3.2.9
 gunicorn==21.2.0
 pillow==10.0.0
 opencv-python-headless==4.10.0.84
+pytesseract==0.3.10
