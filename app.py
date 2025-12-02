@@ -832,6 +832,7 @@ def admin_export():
 
 @app.route('/admin/editar_ingreso/<int:ingreso_id>', methods=['GET', 'POST'])
 def admin_editar_ingreso(ingreso_id):
+    # Validar acceso de administrador
     if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
         flash("⚠️ Acceso restringido a administradores.", "error")
         return redirect('/login')
@@ -839,6 +840,7 @@ def admin_editar_ingreso(ingreso_id):
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Obtener ingreso específico
     cursor.execute("""
         SELECT i.id, u.nombre, u.correo, u.direccion, 
                i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'), 
@@ -855,7 +857,7 @@ def admin_editar_ingreso(ingreso_id):
         flash("Ingreso no encontrado.", "warning")
         return redirect('/admin/dashboard')
 
-    # Convertir tuple en diccionario
+    # Convertir tuple en diccionario para usar en el template
     ingreso = {
         "ingreso_id": row[0],
         "nombre": row[1],
@@ -875,13 +877,14 @@ def admin_editar_ingreso(ingreso_id):
             WHERE id = :2
         """, [estado, ingreso_id])
         conn.commit()
+        cursor.close()
+        conn.close()
         flash("✅ Estado de ingreso actualizado.", "success")
         return redirect('/admin/dashboard')
 
     cursor.close()
     conn.close()
     return render_template('vistas/admin_editar_ingreso.html', ingreso=ingreso)
-
 @app.route('/admin/eliminar_ingreso/<int:ingreso_id>', methods=['POST'])
 def admin_eliminar_ingreso(ingreso_id):
     if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
