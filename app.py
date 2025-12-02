@@ -902,7 +902,7 @@ def admin_historial_pagos():
     cursor.close()
     conn.close()
 
-    return render_template('vista/admin_historial_pagos.html', pagos=pagos)
+    return render_template('vistas/admin_historial_pagos.html', pagos=pagos)
 
 @app.route('/admin/limpiar_historial_pagos/<int:usuario_id>', methods=['POST'])
 def admin_limpiar_historial_pagos(usuario_id):
