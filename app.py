@@ -179,10 +179,9 @@ def ingreso():
         # ✅ Dirección ingresada (si se modificó)
         direccion_form = request.form.get('direccion1') or direccion_usuario
 
-        # ✅ Procesar fotografía (si se subió)
+        # ✅ Procesar fotografía (solo guardar archivo)
         foto = request.files.get('foto')
         nombre_foto = None
-        lectura_foto = None
         if foto and foto.filename != '':
             upload_folder = os.path.join("uploads", "lecturas")
             os.makedirs(upload_folder, exist_ok=True)
@@ -190,25 +189,6 @@ def ingreso():
             nombre_foto = f"{session['usuario_id']}_{fecha_hoy}_{secure_filename(foto.filename)}"
             ruta_foto = os.path.join(upload_folder, nombre_foto)
             foto.save(ruta_foto)
-
-            # OCR con OpenCV + Tesseract
-            img = cv2.imread(ruta_foto)
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
-            texto = pytesseract.image_to_string(thresh, config='--psm 6')
-
-            numeros = re.findall(r'\d+', texto)
-            if numeros:
-                lectura_foto = int(numeros[0])
-
-        # ✅ Comparación automática con tolerancia de 2 m³
-        if lectura_foto is not None:
-            if abs(lectura_actual - lectura_foto) <= 2:
-                flash(f"✅ Confirmación: la lectura manual ({lectura_actual} m³) coincide con la foto ({lectura_foto} m³).", "success")
-            else:
-                flash(f"⚠️ Diferencia detectada: manual {lectura_actual} m³ vs foto {lectura_foto} m³.", "warning")
-        elif foto and foto.filename != '':
-            flash("⚠️ No se pudo leer correctamente la foto del medidor.", "error")
 
         # ✅ Insertar ingreso con lectura, consumo, monto y foto
         cursor.execute("""
@@ -767,7 +747,7 @@ def editar_tramo(tramo_id):
 def mostrar_formulario_edicion(ingreso_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, direccion, consumo, TO_CHAR(fecha, 'YYYY-MM-DD') FROM ingresos WHERE id = :1", [ingreso_id])
+    cursor.execute("SELECT id, direccion, consumo, TO_CHAR(fecha, 'YYYY-MM-DD') FROM ingresos_agua WHERE id = :1", [ingreso_id])
     ingreso = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -777,42 +757,289 @@ def mostrar_formulario_edicion(ingreso_id):
 @app.route('/prueba')
 def prueba():
     return "Ruta de prueba activa"
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
 
-# Configuración Celery (usando Redis como broker)
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+    conn = get_connection()
+    cursor = conn.cursor()
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
+    # ✅ Obtener todos los ingresos con datos de usuario
+    cursor.execute("""
+        SELECT u.id, u.nombre, u.correo, u.direccion,
+               i.id, i.fecha, i.lectura_m3, i.consumo, i.monto, i.foto, i.estado_validacion
+        FROM ingresos_agua i
+        JOIN usuarios u ON i.usuario_id = u.id
+        ORDER BY i.fecha DESC
+    """)
+    registros = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
-# Tarea pesada: análisis de fraude de imágenes
-@celery.task
-def analizar_imagen(path):
+    # Convertir a lista de diccionarios para la vista
+    ingresos = [
+        {
+            "usuario_id": row[0],
+            "nombre": row[1],
+            "correo": row[2],
+            "direccion": row[3],
+            "ingreso_id": row[4],
+            "fecha": row[5],
+            "lectura": row[6],
+            "consumo": row[7],
+            "monto": row[8],
+            "foto": row[9],
+            "estado": row[10]
+        }
+        for row in registros
+    ]
+
+    return render_template('admin_dashboard.html', ingresos=ingresos)
+
+@app.route('/admin/export')
+def admin_export():
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT u.nombre, u.correo, u.direccion,
+               i.fecha, i.lectura_m3, i.consumo, i.monto, i.foto
+        FROM ingresos_agua i
+        JOIN usuarios u ON i.usuario_id = u.id
+        ORDER BY i.fecha DESC
+    """)
+    registros = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # Crear DataFrame
+    df = pd.DataFrame(registros, columns=[
+        "Nombre", "Correo", "Dirección", "Fecha", "Lectura (m³)", "Consumo", "Monto", "Foto"
+    ])
+
+    # Exportar a Excel en memoria
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Ingresos")
+    output.seek(0)
+
+    return send_file(output, download_name="ingresos_admin.xlsx", as_attachment=True)
+
+@app.route('/admin/editar_ingreso/<int:ingreso_id>', methods=['GET', 'POST'])
+def admin_editar_ingreso(ingreso_id):
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT i.id, u.nombre, u.correo, u.direccion, i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'), i.foto, i.estado_validacion
+        FROM ingresos_agua i
+        JOIN usuarios u ON i.usuario_id = u.id
+        WHERE i.id = :1
+    """, [ingreso_id])
+    ingreso = cursor.fetchone()
+
+    if not ingreso:
+        cursor.close()
+        conn.close()
+        flash("Ingreso no encontrado.", "warning")
+        return redirect('/admin/dashboard')
+
+    if request.method == 'POST':
+        estado = request.form.get('estado')  # "aprobado" o "rechazado"
+        cursor.execute("""
+            UPDATE ingresos_agua
+            SET estado_validacion = :1
+            WHERE id = :2
+        """, [estado, ingreso_id])
+        conn.commit()
+        flash("✅ Estado de ingreso actualizado.", "success")
+        return redirect('/admin/dashboard')
+
+    cursor.close()
+    conn.close()
+    return render_template('admin_editar_ingreso.html', ingreso=ingreso)
+
+@app.route('/admin/eliminar_ingreso/<int:ingreso_id>', methods=['POST'])
+def admin_eliminar_ingreso(ingreso_id):
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM ingresos_agua WHERE id = :1", [ingreso_id])
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("✅ Ingreso eliminado por administrador.", "success")
+    return redirect('/admin/dashboard')
+
+@app.route('/admin/historial_pagos')
+def admin_historial_pagos():
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT u.nombre, u.correo, TO_CHAR(p.fecha_pago, 'YYYY-MM-DD'), p.consumo, p.monto
+        FROM pagos_agua p
+        JOIN usuarios u ON p.usuario_id = u.id
+        ORDER BY p.fecha_pago DESC
+    """)
+    pagos = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('admin_historial_pagos.html', pagos=pagos)
+
+@app.route('/admin/limpiar_historial_pagos/<int:usuario_id>', methods=['POST'])
+def admin_limpiar_historial_pagos(usuario_id):
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT ingreso_id FROM pagos_agua WHERE usuario_id = :1", [usuario_id])
+    ingresos_pagados = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("DELETE FROM pagos_agua WHERE usuario_id = :1", [usuario_id])
+
+    if ingresos_pagados:
+        ids_bind = ', '.join([f":id{i}" for i in range(len(ingresos_pagados))])
+        query = f"DELETE FROM ingresos_agua WHERE id IN ({ids_bind})"
+        bind_dict = {f"id{i}": ingreso_id for i, ingreso_id in enumerate(ingresos_pagados)}
+        cursor.execute(query, bind_dict)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("🧹 Historial de pagos del usuario eliminado por administrador.", "success")
+    return redirect('/admin/historial_pagos')
+
+@app.route('/admin/editar_usuario/<int:usuario_id>', methods=['GET', 'POST'])
+def admin_editar_usuario(usuario_id):
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT nombre, apellido, correo, direccion, rol FROM usuarios WHERE id = :1", [usuario_id])
+    usuario = cursor.fetchone()
+
+    if not usuario:
+        cursor.close()
+        conn.close()
+        flash("Usuario no encontrado.", "warning")
+        return redirect('/admin/dashboard')
+
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        apellido = request.form.get('apellido')
+        direccion = request.form.get('direccion')
+        rol = request.form.get('rol')  # admin o usuario
+
+        cursor.execute("""
+            UPDATE usuarios SET nombre = :1, apellido = :2, direccion = :3, rol = :4 WHERE id = :5
+        """, [nombre, apellido, direccion, rol, usuario_id])
+        conn.commit()
+        flash("✅ Perfil de usuario actualizado por administrador.", "success")
+        return redirect('/admin/dashboard')
+
+    cursor.close()
+    conn.close()
+    return render_template('admin_editar_usuario.html', usuario=usuario)
+
+@app.route('/admin/tarifas', methods=['GET', 'POST'])
+def admin_tarifas():
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        desde = request.form.get('desde')
+        hasta = request.form.get('hasta')
+        precio = request.form.get('precio')
+
+        cursor.execute("""
+            INSERT INTO tarifas (desde, hasta, precio) VALUES (:1, :2, :3)
+        """, [desde, hasta, precio])
+        conn.commit()
+        flash("✅ Nueva tarifa agregada.", "success")
+
+    cursor.execute("SELECT id, desde, hasta, precio FROM tarifas ORDER BY desde ASC")
+    tarifas = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('admin_tarifas.html', tarifas=tarifas)
+
+
+@app.route('/admin/editar_tarifa/<int:tarifa_id>', methods=['POST'])
+def editar_tarifa(tarifa_id):
+    if session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido solo para administradores.", "warning")
+        return redirect('/')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
     try:
-        img = Image.open(path)
-        exif_data = img.info.get("exif")
-        if not exif_data:
-            return {"fraude": True, "motivo": "Sin metadatos EXIF"}
-        # Aquí puedes agregar lógica de hashing, watermarking, etc.
-        return {"fraude": False, "motivo": "Imagen válida"}
+        desde = int(request.form['desde'])
+        hasta = request.form['hasta']
+        precio = int(request.form['precio'])
+        hasta_valor = None if hasta.strip() == '' else int(hasta)
+
+        cursor.execute("""
+            UPDATE tarifas SET desde = :1, hasta = :2, precio = :3 WHERE id = :4
+        """, [desde, hasta_valor, precio, tarifa_id])
+        conn.commit()
+        flash("✅ Tramo actualizado correctamente.", "success")
     except Exception as e:
-        return {"fraude": True, "motivo": str(e)}
+        flash(f"❌ Error al actualizar tramo: {e}", "danger")
 
-@app.route("/validar_imagen", methods=["POST"])
-def validar_imagen():
-    path = request.json.get("path")
-    tarea = analizar_imagen.delay(path)  # Ejecuta en segundo plano
-    return jsonify({"task_id": tarea.id}), 202
+    cursor.close()
+    conn.close()
+    return redirect('/admin/tarifas')
 
-@app.route("/resultado/<task_id>")
-def resultado(task_id):
-    tarea = analizar_imagen.AsyncResult(task_id)
-    if tarea.state == "PENDING":
-        return jsonify({"estado": "pendiente"})
-    elif tarea.state == "SUCCESS":
-        return jsonify(tarea.result)
-    else:
-        return jsonify({"estado": tarea.state})
+@app.route('/admin/eliminar_tarifa/<int:tarifa_id>', methods=['POST'])
+def eliminar_tarifa(tarifa_id):
+    if session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido solo para administradores.", "warning")
+        return redirect('/')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("DELETE FROM tarifas WHERE id = :1", [tarifa_id])
+        conn.commit()
+        flash("🗑️ Tramo eliminado correctamente.", "success")
+    except Exception as e:
+        flash(f"❌ Error al eliminar tramo: {e}", "danger")
+
+    cursor.close()
+    conn.close()
+    return redirect('/admin/tarifas')
 
 
 if __name__ == '__main__':
