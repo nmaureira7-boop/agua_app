@@ -38,11 +38,18 @@
         </li>
 
         {% if session['usuario_rol'] == 'admin' %}
-        <li class="nav-item">
-          <a class="nav-link {% if vista == 'admin_tarifas' %}active{% endif %}" href="/admin/tarifas">
-            <i class="fa-solid fa-sliders"></i> Tarifas
-            <span class="badge bg-warning text-dark ms-1">👑</span>
+        <!-- Menú desplegable exclusivo para administradores -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if 'admin' in vista %}active{% endif %}" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-crown"></i> Administración
           </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item {% if vista == 'admin_dashboard' %}active{% endif %}" href="/admin/dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard Admin</a></li>
+            <li><a class="dropdown-item {% if vista == 'admin_export' %}active{% endif %}" href="/admin/export"><i class="fa-solid fa-file-export"></i> Exportar Ingresos</a></li>
+            <li><a class="dropdown-item {% if vista == 'admin_historial_pagos' %}active{% endif %}" href="/admin/historial_pagos"><i class="fa-solid fa-credit-card"></i> Historial Pagos</a></li>
+            <li><a class="dropdown-item {% if vista == 'admin_editar_usuario' %}active{% endif %}" href="/admin/editar_usuario/1"><i class="fa-solid fa-users-gear"></i> Gestión Usuarios</a></li>
+            <li><a class="dropdown-item {% if vista == 'admin_tarifas' %}active{% endif %}" href="/admin/tarifas"><i class="fa-solid fa-sliders"></i> Tarifas</a></li>
+          </ul>
         </li>
         {% endif %}
       </ul>
@@ -59,7 +66,6 @@
             <li><a class="dropdown-item" href="/perfil"><i class="fa-solid fa-user-gear"></i> Editar perfil</a></li>
             <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
               <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
-            </a>
             </a></li>
           </ul>
         </li>
