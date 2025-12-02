@@ -840,18 +840,32 @@ def admin_editar_ingreso(ingreso_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT i.id, u.nombre, u.correo, u.direccion, i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'), i.foto, i.estado_validacion
+        SELECT i.id, u.nombre, u.correo, u.direccion, 
+               i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'), 
+               i.foto, i.estado_validacion
         FROM ingresos_agua i
         JOIN usuarios u ON i.usuario_id = u.id
         WHERE i.id = :1
     """, [ingreso_id])
-    ingreso = cursor.fetchone()
+    row = cursor.fetchone()
 
-    if not ingreso:
+    if not row:
         cursor.close()
         conn.close()
         flash("Ingreso no encontrado.", "warning")
         return redirect('/admin/dashboard')
+
+    # Convertir tuple en diccionario
+    ingreso = {
+        "ingreso_id": row[0],
+        "nombre": row[1],
+        "correo": row[2],
+        "direccion": row[3],
+        "consumo": row[4],
+        "fecha": row[5],
+        "foto": row[6],
+        "estado": row[7]
+    }
 
     if request.method == 'POST':
         estado = request.form.get('estado')  # "aprobado" o "rechazado"
