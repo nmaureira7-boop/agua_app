@@ -1,21 +1,22 @@
-from flask import Flask, render_template, request, redirect, session, flash, send_file
-from werkzeug.security import generate_password_hash, check_password_hash
-from db_config import get_connection
-import pandas as pd
-import calendar
-import oracledb
+# Librerías estándar
+import os
 import io
+import calendar
 from collections import defaultdict
 from statistics import mean
 from datetime import date
-from utils import obtener_ingreso_usuario
-from utils import validar_consumo
+
+# Librerías externas
+import pandas as pd
+import oracledb
+from flask import Flask, render_template, request, redirect, session, flash, send_file, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
-import os
-from flask import Flask
-from flask import Flask, request, jsonify
-import piexif
-from PIL import Image
+from PIL import Image  # solo si realmente lo usas
+
+# Módulos propios
+from db_config import get_connection
+from utils import obtener_ingreso_usuario, validar_consumo
 
 
 app = Flask(__name__)
