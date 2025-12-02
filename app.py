@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 import os
 from flask import Flask
 from flask import Flask, request, jsonify
-from celery import Celery
 import piexif
 from PIL import Image
 
