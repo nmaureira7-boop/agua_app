@@ -201,12 +201,25 @@ def ingreso():
         # ✅ Dirección ingresada (si se modificó)
         direccion_form = request.form.get('direccion1') or direccion_usuario
 
-        # ✅ Procesar fotografía (solo guardar nombre, luego se sube en /subir_foto)
-        nombre_foto = None
+        # ✅ Procesar fotografía: subir a Google Cloud Storage y guardar URL pública
+        url_foto = None
         foto = request.files.get('foto')
         if foto and foto.filename != '':
             nombre_foto = f"{session['usuario_id']}_{fecha_hoy}_{secure_filename(foto.filename)}"
-            # Aquí solo guardamos el nombre, la subida real se hace en /subir_foto
+
+            # Inicializar cliente de GCS
+            storage_client = storage.Client()
+            bucket = storage_client.bucket("TU_BUCKET_NAME")  # ⚠️ reemplaza con tu bucket
+            blob = bucket.blob(nombre_foto)
+
+            # Subir archivo directamente desde el objeto FileStorage
+            blob.upload_from_file(foto, content_type=foto.content_type)
+
+            # Hacerlo público (si tu bucket no tiene política pública)
+            blob.make_public()
+
+            # Guardar URL pública
+            url_foto = blob.public_url
 
         # ✅ Insertar ingreso y obtener ID
         ingreso_id_var = cursor.var(int)
@@ -214,7 +227,7 @@ def ingreso():
             INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha, url_foto, estado_validacion, visible_usuario)
             VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'), :6, 'pendiente', 1)
             RETURNING id INTO :7
-        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy, nombre_foto, ingreso_id_var])
+        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy, url_foto, ingreso_id_var])
 
         # ✅ Actualizar dirección si cambió
         if direccion_form != direccion_usuario:
