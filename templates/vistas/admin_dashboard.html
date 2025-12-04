@@ -31,16 +31,16 @@
         <td>{{ ingreso.consumo }}</td>
         <td>{{ ingreso.monto }}</td>
         <td>
-          {% if ingreso.foto %}
+          {% if ingreso.url_foto %}
             <!-- Miniatura -->
-            <img src="{{ ingreso.foto }}" alt="Foto ingreso" width="80" class="img-thumbnail mb-2">
+            <img src="{{ ingreso.url_foto }}" alt="Foto ingreso" width="80" class="img-thumbnail mb-2">
             <div>
               <!-- Ver en pestaña nueva -->
-              <a href="{{ ingreso.foto }}" target="_blank" class="btn btn-sm btn-outline-info">
+              <a href="{{ ingreso.url_foto }}" target="_blank" class="btn btn-sm btn-outline-info">
                 <i class="fa-solid fa-eye"></i> Ver
               </a>
               <!-- Descargar -->
-              <a href="{{ ingreso.foto }}" download class="btn btn-sm btn-outline-success">
+              <a href="{{ ingreso.url_foto }}" download class="btn btn-sm btn-outline-success">
                 <i class="fa-solid fa-download"></i> Descargar
               </a>
             </div>
