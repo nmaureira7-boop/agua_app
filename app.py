@@ -13,11 +13,17 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from PIL import Image  # solo si realmente lo usas
+from google.cloud import storage
+from werkzeug.utils import secure_filename
 
 # Módulos propios
 from db_config import get_connection
 from utils import obtener_ingreso_usuario, validar_consumo
 
+# Inicializa cliente de Google Cloud Storage
+storage_client = storage.Client()
+BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "bluedate-fotos")
+bucket = storage_client.bucket(BUCKET_NAME)
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta'  # Necesaria para usar sesiones y flash
@@ -933,17 +939,24 @@ def subir_foto(ingreso_id):
     if request.method == 'POST':
         foto = request.files['foto']
         if foto:
-            nombre_foto = f"{ingreso_id}_{date.today()}_{foto.filename}"
-            ruta = os.path.join("uploads", "lecturas", nombre_foto)
-            foto.save(ruta)
+            # Nombre seguro y único
+            nombre_foto = f"{ingreso_id}_{date.today()}_{secure_filename(foto.filename)}"
 
+            # Subir directamente a GCS
+            blob = bucket.blob(f"lecturas/{nombre_foto}")
+            blob.upload_from_file(foto, content_type=foto.content_type)
+
+            # URL pública (si el bucket está configurado como público)
+            url_publica = f"https://storage.googleapis.com/{BUCKET_NAME}/lecturas/{nombre_foto}"
+
+            # Guardar la URL en la base de datos en vez de la ruta local
             conn = get_connection()
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE ingresos_agua
                 SET foto = :1, estado_validacion = 'enviado'
                 WHERE id = :2
-            """, [nombre_foto, ingreso_id])
+            """, [url_publica, ingreso_id])
             conn.commit()
             cursor.close()
             conn.close()
@@ -952,6 +965,7 @@ def subir_foto(ingreso_id):
             return redirect('/historial_pagos')
 
     return render_template('subir_foto.html', ingreso_id=ingreso_id)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
