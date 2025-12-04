@@ -524,14 +524,31 @@ def historial_pagos():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT TO_CHAR(fecha_pago, 'YYYY-MM-DD'), consumo, monto
+        SELECT id, 
+               TO_CHAR(fecha_pago, 'YYYY-MM-DD') AS fecha,
+               consumo,
+               monto,
+               estado_validacion
         FROM pagos_agua
         WHERE usuario_id = :1
         ORDER BY fecha_pago DESC
     """, [session['usuario_id']])
-    pagos = cursor.fetchall()
+
+    rows = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    # Convertir filas en diccionarios para que Jinja pueda usar pago.fecha, pago.monto, etc.
+    pagos = [
+        {
+            "ingreso_id": row[0],
+            "fecha": row[1],
+            "consumo": row[2],
+            "monto": row[3],
+            "estado_validacion": row[4]
+        }
+        for row in rows
+    ]
 
     return render_template('base.html', vista='historial_pagos', pagos=pagos)
 @app.route('/limpiar_historial_pagos', methods=['POST'])
