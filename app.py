@@ -838,7 +838,7 @@ def admin_editar_ingreso(ingreso_id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ Obtener ingreso específico con url_foto y estado_validacion
+    # ✅ Obtener ingreso específico con url_foto, estado_validacion y mensaje_admin
     cursor.execute("""
         SELECT i.id, u.nombre, u.correo, u.direccion,
                i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'),
@@ -863,13 +863,13 @@ def admin_editar_ingreso(ingreso_id):
         "direccion": row[3],
         "consumo": row[4],
         "fecha": row[5],
-        "url_foto": row[6],              # ahora usamos url_foto
+        "url_foto": row[6],              # usamos url_foto
         "estado_validacion": row[7],     # nombre consistente
         "mensaje_admin": row[8]          # agregado para mostrar mensajes
     }
 
     if request.method == 'POST':
-        estado = request.form.get('estado')  # "aprobado", "rechazado", "pendiente"
+        estado = request.form.get('estado')          # "aprobado", "rechazado", "pendiente"
         mensaje_admin = request.form.get('mensaje_admin')  # opcional
 
         cursor.execute("""
@@ -888,7 +888,6 @@ def admin_editar_ingreso(ingreso_id):
     cursor.close()
     conn.close()
     return render_template('vistas/admin_editar_ingreso.html', ingreso=ingreso)
-
 @app.route('/admin/eliminar_ingreso/<int:ingreso_id>', methods=['POST'])
 def admin_eliminar_ingreso(ingreso_id):
     if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
