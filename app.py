@@ -420,7 +420,7 @@ def pago():
 
         # Renderizar vista de pago
         return render_template(
-            'pago.html',   # ⚡ mejor usar un template específico en vez de 'base.html'
+            'vistas/pago.html',   # ⚡ mejor usar un template específico en vez de 'base.html'
             monto=monto_total,
             consumo=consumo_m3,
             direccion=direccion,
