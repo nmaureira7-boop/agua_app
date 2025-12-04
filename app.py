@@ -838,11 +838,11 @@ def admin_editar_ingreso(ingreso_id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Obtener ingreso específico
+    # ✅ Obtener ingreso específico con url_foto y estado_validacion
     cursor.execute("""
-        SELECT i.id, u.nombre, u.correo, u.direccion, 
-               i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'), 
-               i.foto, i.estado_validacion
+        SELECT i.id, u.nombre, u.correo, u.direccion,
+               i.consumo, TO_CHAR(i.fecha, 'YYYY-MM-DD'),
+               i.url_foto, i.estado_validacion, i.mensaje_admin
         FROM ingresos_agua i
         JOIN usuarios u ON i.usuario_id = u.id
         WHERE i.id = :1
@@ -855,7 +855,7 @@ def admin_editar_ingreso(ingreso_id):
         flash("Ingreso no encontrado.", "warning")
         return redirect('/admin/dashboard')
 
-    # Convertir tuple en diccionario para usar en el template
+    # ✅ Convertir tuple en diccionario para usar en el template
     ingreso = {
         "ingreso_id": row[0],
         "nombre": row[1],
@@ -863,21 +863,26 @@ def admin_editar_ingreso(ingreso_id):
         "direccion": row[3],
         "consumo": row[4],
         "fecha": row[5],
-        "foto": row[6],
-        "estado": row[7]
+        "url_foto": row[6],              # ahora usamos url_foto
+        "estado_validacion": row[7],     # nombre consistente
+        "mensaje_admin": row[8]          # agregado para mostrar mensajes
     }
 
     if request.method == 'POST':
-        estado = request.form.get('estado')  # "aprobado" o "rechazado"
+        estado = request.form.get('estado')  # "aprobado", "rechazado", "pendiente"
+        mensaje_admin = request.form.get('mensaje_admin')  # opcional
+
         cursor.execute("""
             UPDATE ingresos_agua
-            SET estado_validacion = :1
-            WHERE id = :2
-        """, [estado, ingreso_id])
+            SET estado_validacion = :1,
+                mensaje_admin = :2
+            WHERE id = :3
+        """, [estado, mensaje_admin, ingreso_id])
+
         conn.commit()
         cursor.close()
         conn.close()
-        flash("✅ Estado de ingreso actualizado.", "success")
+        flash("✅ Estado y mensaje del ingreso actualizados.", "success")
         return redirect('/admin/dashboard')
 
     cursor.close()
