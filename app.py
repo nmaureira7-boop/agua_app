@@ -209,17 +209,14 @@ def ingreso():
 
             # Inicializar cliente de GCS
             storage_client = storage.Client()
-            bucket = storage_client.bucket("bluedate-fotos")  # ⚠️ reemplaza con tu bucket
+            bucket = storage_client.bucket("bluedate-fotos")  # ✅ tu bucket real
             blob = bucket.blob(nombre_foto)
 
             # Subir archivo directamente desde el objeto FileStorage
             blob.upload_from_file(foto, content_type=foto.content_type)
 
-            # Hacerlo público (si tu bucket no tiene política pública)
-            blob.make_public()
-
-            # Guardar URL pública
-            url_foto = blob.public_url
+            # ✅ Construir URL pública manualmente (sin blob.make_public por UBLA)
+            url_foto = f"https://storage.googleapis.com/bluedate-fotos/{nombre_foto}"
 
         # ✅ Insertar ingreso y obtener ID
         ingreso_id_var = cursor.var(int)
