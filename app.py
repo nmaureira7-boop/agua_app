@@ -22,8 +22,8 @@ from utils import obtener_ingreso_usuario, validar_consumo
 
 # Inicializa cliente de Google Cloud Storage
 storage_client = storage.Client()
-BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "bluedate-fotos")
-bucket = storage_client.bucket(BUCKET_NAME)
+bucket_name = os.getenv("GCS_BUCKET_NAME", "bluedate-fotos")
+bucket = storage_client.bucket(bucket_name)
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta'  # Necesaria para usar sesiones y flash
