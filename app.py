@@ -954,34 +954,46 @@ def admin_editar_usuario(usuario_id):
         flash("⚠️ Acceso restringido a administradores.", "error")
         return redirect('/login')
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT nombre, apellido, correo, direccion, rol FROM usuarios WHERE id = :1", [usuario_id])
-    usuario = cursor.fetchone()
+        cursor.execute("SELECT id, nombre, apellido, correo, direccion, rol FROM usuarios WHERE id = :1", [usuario_id])
+        row = cursor.fetchone()
 
-    if not usuario:
+        if not row:
+            flash("Usuario no encontrado.", "warning")
+            return redirect('/admin/dashboard')
+
+        usuario = {
+            "id": row[0],
+            "nombre": row[1],
+            "apellido": row[2],
+            "correo": row[3],
+            "direccion": row[4],
+            "rol": row[5]
+        }
+
+        if request.method == 'POST':
+            nombre = request.form.get('nombre')
+            apellido = request.form.get('apellido')
+            direccion = request.form.get('direccion')
+            rol = request.form.get('rol')
+            correo = request.form.get('correo')
+
+            cursor.execute("""
+                UPDATE usuarios
+                SET nombre = :1, apellido = :2, direccion = :3, rol = :4, correo = :5
+                WHERE id = :6
+            """, [nombre, apellido, direccion, rol, correo, usuario_id])
+            conn.commit()
+            flash("✅ Perfil de usuario actualizado por administrador.", "success")
+            return redirect('/admin/dashboard')
+
+        return render_template('admin_editar_usuario.html', usuario=usuario)
+    finally:
         cursor.close()
         conn.close()
-        flash("Usuario no encontrado.", "warning")
-        return redirect('/admin/dashboard')
-
-    if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        apellido = request.form.get('apellido')
-        direccion = request.form.get('direccion')
-        rol = request.form.get('rol')  # admin o usuario
-
-        cursor.execute("""
-            UPDATE usuarios SET nombre = :1, apellido = :2, direccion = :3, rol = :4 WHERE id = :5
-        """, [nombre, apellido, direccion, rol, usuario_id])
-        conn.commit()
-        flash("✅ Perfil de usuario actualizado por administrador.", "success")
-        return redirect('/admin/dashboard')
-
-    cursor.close()
-    conn.close()
-    return render_template('admin_editar_usuario.html', usuario=usuario)
 
 @app.route('/admin/tarifas', methods=['GET', 'POST'])
 def admin_tarifas():
