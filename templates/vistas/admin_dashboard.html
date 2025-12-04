@@ -16,6 +16,7 @@
         <th>Monto</th>
         <th>Foto</th>
         <th>Estado</th>
+        <th>Mensaje Admin</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -47,11 +48,26 @@
             <span class="text-muted">Sin foto</span>
           {% endif %}
         </td>
-        <td>{{ ingreso.estado or 'Pendiente' }}</td>
+        <td>{{ ingreso.estado_validacion or 'Pendiente' }}</td>
         <td>
-          <a href="{{ url_for('admin_editar_ingreso', ingreso_id=ingreso.ingreso_id) }}" class="btn btn-sm btn-primary">
+          {% if ingreso.mensaje_admin %}
+            <span class="text-warning"><i class="fa-solid fa-comment"></i> {{ ingreso.mensaje_admin }}</span>
+          {% else %}
+            <span class="text-muted">Sin mensaje</span>
+          {% endif %}
+        </td>
+        <td>
+          <!-- Editar ingreso (estado y mensaje) -->
+          <a href="{{ url_for('admin_editar_ingreso', ingreso_id=ingreso.ingreso_id) }}" class="btn btn-sm btn-primary mb-1">
             <i class="fa-solid fa-pen"></i> Editar
           </a>
+          <!-- Marcar pendiente de foto rápido -->
+          <form action="{{ url_for('admin_marcar_pendiente', ingreso_id=ingreso.ingreso_id) }}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-warning mb-1">
+              <i class="fa-solid fa-image"></i> Pendiente de foto
+            </button>
+          </form>
+          <!-- Eliminar ingreso -->
           <form action="{{ url_for('admin_eliminar_ingreso', ingreso_id=ingreso.ingreso_id) }}" method="post" style="display:inline;">
             <button type="submit" class="btn btn-sm btn-danger">
               <i class="fa-solid fa-trash"></i> Eliminar
