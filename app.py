@@ -909,6 +909,8 @@ def admin_eliminar_ingreso(ingreso_id):
 
 from flask import send_from_directory
 
+from flask import send_from_directory
+
 @app.route('/uploads/lecturas/<filename>')
 def ver_foto(filename):
     return send_from_directory(os.path.join("uploads", "lecturas"), filename)
