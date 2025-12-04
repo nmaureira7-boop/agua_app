@@ -49,7 +49,7 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__fadeInDown mx-3 mt-3" role="alert">
+        <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__fadeInDown mx-3 mt-3 flash-message" role="alert">
           {% if category == 'success' %}
             <i class="fa-solid fa-circle-check me-2"></i>
           {% elif category == 'warning' %}
@@ -75,9 +75,8 @@
       alert.style.opacity = "0";
       setTimeout(() => alert.remove(), 800); // elimina del DOM
     });
-  }, 4000); // 4000 ms = 4 segundos
-</script>
-
+  }, 4000);
+  </script>
 
   <!-- Contenido dinámico -->
   <div class="container mt-4">
@@ -98,6 +97,8 @@
       {% include 'vistas/historial_pagos.html' %}
     {% elif vista == 'perfil' %}
       {% include 'vistas/perfil.html' %}
+    {% elif vista == 'subir_foto' %}
+      {% include 'vistas/subir_foto.html' %}
     {% elif vista == 'admin_dashboard' and session.get('usuario_rol') == 'admin' %}
       {% include 'vistas/admin_dashboard.html' %}
     {% elif vista == 'admin_editar_usuario' and session.get('usuario_rol') == 'admin' %}
@@ -107,7 +108,7 @@
       <span class="badge bg-warning text-dark ms-2">👑 Administrador</span>
     {% endif %}
   {% endblock %}
-</div>
+  </div>
 
   <!-- Script para modo oscuro -->
   <script>
