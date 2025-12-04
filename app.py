@@ -93,17 +93,11 @@ def login():
         cursor.execute("SELECT id, contraseña, rol FROM usuarios WHERE correo = :1", [correo])
         usuario = cursor.fetchone()
 
-        cursor.close()
-        conn.close()
-
         if usuario and check_password_hash(usuario[1], contraseña):
             session['usuario_id'] = usuario[0]
-            session['usuario_rol'] = usuario[2]  # ✅ Guarda el rol en sesión
-            flash("Inicio de sesión exitoso. ¡Bienvenido!", "success")
+            session['usuario_rol'] = usuario[2]
 
             # 🔍 Revisar si el usuario tiene ingresos pendientes de foto
-            conn = get_connection()
-            cursor = conn.cursor()
             cursor.execute("""
                 SELECT COUNT(*) 
                 FROM ingresos_agua 
@@ -111,15 +105,19 @@ def login():
                   AND estado_validacion = 'pendiente'
             """, [usuario[0]])
             pendientes = cursor.fetchone()[0]
-            cursor.close()
-            conn.close()
 
             if pendientes > 0:
                 flash("⚠️ Tu pago está pendiente de confirmación. Debes enviar la foto de la lectura.", "warning")
 
+            flash("Inicio de sesión exitoso. ¡Bienvenido!", "success")
+
+            cursor.close()
+            conn.close()
             return redirect('/ingreso')
         else:
             flash("Correo o contraseña incorrectos", "error")
+            cursor.close()
+            conn.close()
             return redirect('/login')
 
     return render_template('base.html', vista='login')
