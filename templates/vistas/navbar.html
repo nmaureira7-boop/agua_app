@@ -22,11 +22,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if vista == 'dashboard' %}active{% endif %}" href="/dashboard">
-            <i class="fa-solid fa-gauge-high"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link {% if vista == 'pago' %}active{% endif %}" href="/pago">
             <i class="fa-solid fa-money-check-dollar"></i> Pago
           </a>
@@ -45,9 +40,6 @@
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item {% if vista == 'admin_dashboard' %}active{% endif %}" href="/admin/dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard Admin</a></li>
-            <li><a class="dropdown-item {% if vista == 'admin_export' %}active{% endif %}" href="/admin/export"><i class="fa-solid fa-file-export"></i> Exportar Ingresos</a></li>
-            <li><a class="dropdown-item {% if vista == 'admin_historial_pagos' %}active{% endif %}" href="/admin/historial_pagos"><i class="fa-solid fa-credit-card"></i> Historial Pagos</a></li>
-            <li><a class="dropdown-item {% if vista == 'admin_editar_usuario' %}active{% endif %}" href="/admin/editar_usuario/1"><i class="fa-solid fa-users-gear"></i> Gestión Usuarios</a></li>
             <li><a class="dropdown-item {% if vista == 'admin_tarifas' %}active{% endif %}" href="/admin/tarifas"><i class="fa-solid fa-sliders"></i> Tarifas</a></li>
           </ul>
         </li>
