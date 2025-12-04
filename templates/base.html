@@ -66,6 +66,19 @@
     {% endif %}
   {% endwith %}
 
+  <script>
+  // Ocultar automáticamente las alertas después de 4 segundos
+  setTimeout(() => {
+    const alerts = document.querySelectorAll('.flash-message');
+    alerts.forEach(alert => {
+      alert.style.transition = "opacity 0.8s ease";
+      alert.style.opacity = "0";
+      setTimeout(() => alert.remove(), 800); // elimina del DOM
+    });
+  }, 4000); // 4000 ms = 4 segundos
+</script>
+
+
   <!-- Contenido dinámico -->
   <div class="container mt-4">
   {% block content %}
@@ -77,8 +90,6 @@
       {% include 'vistas/ingreso.html' %}
     {% elif vista == 'resumen' %}
       {% include 'vistas/resumen.html' %}
-    {% elif vista == 'dashboard' %}
-      {% include 'vistas/dashboard.html' %}
     {% elif vista == 'pago' %}
       {% include 'vistas/pago.html' %}
     {% elif vista == 'editar_ingreso_manual' %}
@@ -89,12 +100,6 @@
       {% include 'vistas/perfil.html' %}
     {% elif vista == 'admin_dashboard' and session.get('usuario_rol') == 'admin' %}
       {% include 'vistas/admin_dashboard.html' %}
-    {% elif vista == 'admin_export' and session.get('usuario_rol') == 'admin' %}
-      {% include 'vistas/admin_export.html' %}
-    {% elif vista == 'admin_editar_ingreso' and session.get('usuario_rol') == 'admin' %}
-      {% include 'vistas/admin_editar_ingreso.html' %}
-    {% elif vista == 'admin_historial_pagos' and session.get('usuario_rol') == 'admin' %}
-      {% include 'vistas/admin_historial_pagos.html' %}
     {% elif vista == 'admin_editar_usuario' and session.get('usuario_rol') == 'admin' %}
       {% include 'vistas/admin_editar_usuario.html' %}
     {% elif vista == 'admin_tarifas' and session.get('usuario_rol') == 'admin' %}
