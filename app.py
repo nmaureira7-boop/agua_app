@@ -947,9 +947,8 @@ def subir_foto(ingreso_id):
             blob = bucket.blob(f"lecturas/{nombre_foto}")
             blob.upload_from_file(foto, content_type=foto.content_type)
 
-            # Hacer público y obtener URL
-            blob.make_public()
-            url_publica = blob.public_url
+            # Construir URL pública sin usar ACL
+            url_publica = f"https://storage.googleapis.com/{bucket.name}/{blob.name}"
 
             # Guardar la URL en la base de datos
             try:
@@ -965,7 +964,6 @@ def subir_foto(ingreso_id):
             except Exception as e:
                 flash(f"Error al guardar la foto: {e}", "error")
             finally:
-                # Cerrar recursos aunque haya error
                 if 'cursor' in locals():
                     cursor.close()
                 if 'conn' in locals():
