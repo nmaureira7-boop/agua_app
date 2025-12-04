@@ -343,47 +343,6 @@ def resumen():
         valores_anual=valores_anual,
         lecturas_por_mes=lecturas_por_mes
     )
-@app.route('/dashboard')
-def dashboard():
-    if 'usuario_id' not in session:
-        return redirect('/login')
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT TO_CHAR(fecha, 'DD'), consumo, fecha
-        FROM ingresos_agua
-        WHERE usuario_id = :1
-        ORDER BY fecha
-    """, [session['usuario_id']])
-    registros = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    hoy = date.today()
-    dias = defaultdict(list)
-    futuros = {}
-
-    for dia_str, consumo, fecha in registros:
-        dia = int(dia_str)
-        consumo = float(consumo)
-        dias[dia].append(consumo)
-        if fecha.date() > hoy:
-            futuros[dia] = consumo  # último ingreso futuro por día
-
-    labels_dias = sorted(dias.keys())
-    valores_promedio = [round(mean(dias[d]), 2) for d in labels_dias]
-    valores_futuros = [futuros.get(d, None) for d in labels_dias]
-
-    return render_template(
-        'base.html',
-        vista='dashboard',
-        labels_dias=labels_dias,
-        valores_promedio=valores_promedio,
-        valores_futuros=valores_futuros
-    )
-
 
 @app.route('/pago', methods=['GET', 'POST'])
 def pago():
@@ -397,80 +356,83 @@ def pago():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 🔍 Buscar el último ingreso del mes que no ha sido pagado, incluyendo monto y dirección
-    cursor.execute("""
-        SELECT i.id, i.consumo, i.monto, u.direccion, TO_CHAR(i.fecha, 'YYYY-MM-DD')
-        FROM ingresos_agua i
-        JOIN usuarios u ON i.usuario_id = u.id
-        WHERE i.usuario_id = :1
-          AND EXTRACT(MONTH FROM i.fecha) = :2
-          AND EXTRACT(YEAR FROM i.fecha) = :3
-          AND NOT EXISTS (
-              SELECT 1 FROM pagos_agua p WHERE p.ingreso_id = i.id
-          )
-        ORDER BY i.fecha DESC
-        FETCH FIRST 1 ROWS ONLY
-    """, [session['usuario_id'], mes_actual, anio_actual])
-    resultado = cursor.fetchone()
-
-    if not resultado:
-        flash("✅ Ya has pagado todas las lecturas de este mes.", "info")
-        cursor.close()
-        conn.close()
-        return redirect('/historial_pagos')
-
-    ingreso_id = resultado[0]
-    consumo_m3 = resultado[1]
-    monto_total = resultado[2]
-    direccion = resultado[3]
-    fecha_lectura = resultado[4]
-
-    # 📋 Obtener resumen de ingresos (pagados y pendientes)
-    cursor.execute("""
-        SELECT i.id, TO_CHAR(i.fecha, 'YYYY-MM-DD') AS fecha, u.direccion, i.consumo,
-               CASE WHEN p.id IS NOT NULL THEN 'pagado' ELSE 'pendiente' END AS estado,
-               p.monto
-        FROM ingresos_agua i
-        JOIN usuarios u ON i.usuario_id = u.id
-        LEFT JOIN pagos_agua p ON p.ingreso_id = i.id
-        WHERE i.usuario_id = :1
-        ORDER BY i.fecha DESC
-    """, [session['usuario_id']])
-    resumen = cursor.fetchall()
-    resumen_ingresos = [
-        {
-            'fecha': row[1],
-            'direccion': row[2],
-            'consumo': row[3],
-            'estado': row[4],
-            'monto': row[5] if row[5] else None
-        }
-        for row in resumen
-    ]
-
-    if request.method == 'POST':
-        # 💳 Registrar el pago vinculado al ingreso
+    try:
+        # 🔍 Buscar el último ingreso del mes que no ha sido pagado
         cursor.execute("""
-            INSERT INTO pagos_agua (usuario_id, ingreso_id, consumo, monto, fecha_pago)
-            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'))
-        """, [session['usuario_id'], ingreso_id, consumo_m3, monto_total, fecha_lectura])
-        conn.commit()
-        flash("✅ Pago registrado correctamente.", "success")
+            SELECT i.id, i.consumo, i.monto, u.direccion, TO_CHAR(i.fecha, 'YYYY-MM-DD')
+            FROM ingresos_agua i
+            JOIN usuarios u ON i.usuario_id = u.id
+            WHERE i.usuario_id = :1
+              AND EXTRACT(MONTH FROM i.fecha) = :2
+              AND EXTRACT(YEAR FROM i.fecha) = :3
+              AND NOT EXISTS (
+                  SELECT 1 FROM pagos_agua p WHERE p.ingreso_id = i.id
+              )
+            ORDER BY i.fecha DESC
+            FETCH FIRST 1 ROWS ONLY
+        """, [session['usuario_id'], mes_actual, anio_actual])
+
+        resultado = cursor.fetchone()
+
+        if not resultado:
+            flash("✅ Ya has pagado todas las lecturas de este mes.", "info")
+            return redirect('/historial_pagos')
+
+        ingreso_id, consumo_m3, monto_total, direccion, fecha_lectura = resultado
+
+        # 📋 Obtener resumen de ingresos (pagados y pendientes)
+        cursor.execute("""
+            SELECT i.id,
+                   TO_CHAR(i.fecha, 'YYYY-MM-DD') AS fecha,
+                   u.direccion,
+                   i.consumo,
+                   CASE WHEN p.id IS NOT NULL THEN 'pagado' ELSE 'pendiente' END AS estado,
+                   p.monto
+            FROM ingresos_agua i
+            JOIN usuarios u ON i.usuario_id = u.id
+            LEFT JOIN pagos_agua p ON p.ingreso_id = i.id
+            WHERE i.usuario_id = :1
+            ORDER BY i.fecha DESC
+        """, [session['usuario_id']])
+
+        resumen = cursor.fetchall()
+        resumen_ingresos = [
+            {
+                'fecha': row[1],
+                'direccion': row[2],
+                'consumo': row[3],
+                'estado': row[4],
+                'monto': row[5] if row[5] else None
+            }
+            for row in resumen
+        ]
+
+        if request.method == 'POST':
+            # 💳 Registrar el pago vinculado al ingreso
+            cursor.execute("""
+                INSERT INTO pagos_agua (usuario_id, ingreso_id, consumo, monto, fecha_pago)
+                VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'))
+            """, [session['usuario_id'], ingreso_id, consumo_m3, monto_total, fecha_lectura])
+
+            conn.commit()
+            flash("✅ Pago registrado correctamente.", "success")
+            return redirect('/historial_pagos')
+
+        # Renderizar vista de pago
+        return render_template(
+            'pago.html',   # ⚡ mejor usar un template específico en vez de 'base.html'
+            monto=monto_total,
+            consumo=consumo_m3,
+            direccion=direccion,
+            fecha=fecha_lectura,
+            resumen_ingresos=resumen_ingresos
+        )
+
+    finally:
         cursor.close()
         conn.close()
-        return redirect('/historial_pagos')
 
-    cursor.close()
-    conn.close()
-    return render_template(
-        'base.html',
-        vista='pago',
-        monto=monto_total,
-        consumo=consumo_m3,
-        direccion=direccion,
-        fecha=fecha_lectura,
-        resumen_ingresos=resumen_ingresos
-    )
+
 @app.route('/editar_ingreso', methods=['GET', 'POST'])
 def editar_ingreso_manual():
     if 'usuario_id' not in session:
