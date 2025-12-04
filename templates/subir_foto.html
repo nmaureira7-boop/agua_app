@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-center">
+  <div class="card p-4 shadow-lg bg-white rounded" style="max-width: 500px; width: 100%;">
+    <h2 class="text-center mb-4"><i class="fa-solid fa-camera"></i> Subir foto</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="foto" class="form-label">Selecciona la foto de la lectura</label>
+        <input type="file" class="form-control" id="foto" name="foto" accept="image/*" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fa-solid fa-upload"></i> Enviar foto
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
