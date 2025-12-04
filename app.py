@@ -525,15 +525,19 @@ def historial_pagos():
 
     conn = get_connection()
     cursor = conn.cursor()
+
+    # ✅ Traer ingresos del usuario, solo los visibles para él
     cursor.execute("""
-        SELECT id, 
-               TO_CHAR(fecha_pago, 'YYYY-MM-DD') AS fecha,
+        SELECT id,
+               TO_CHAR(fecha, 'YYYY-MM-DD') AS fecha,
                consumo,
                monto,
+               url_foto,
                estado_validacion
-        FROM pagos_agua
+        FROM ingresos_agua
         WHERE usuario_id = :1
-        ORDER BY fecha_pago DESC
+          AND visible_usuario = 1
+        ORDER BY fecha DESC
     """, [session['usuario_id']])
 
     rows = cursor.fetchall()
@@ -547,7 +551,8 @@ def historial_pagos():
             "fecha": row[1],
             "consumo": row[2],
             "monto": row[3],
-            "estado_validacion": row[4]
+            "url_foto": row[4],             # ✅ ahora se muestra la foto
+            "estado_validacion": row[5]     # ✅ estado consistente con admin
         }
         for row in rows
     ]
@@ -561,35 +566,25 @@ def limpiar_historial_pagos():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 1. Obtener los ingreso_id que fueron pagados
+    # 1. Ocultar los ingresos del usuario en vez de borrarlos
     cursor.execute("""
-        SELECT ingreso_id
-        FROM pagos_agua
+        UPDATE ingresos_agua
+        SET visible_usuario = 0
         WHERE usuario_id = :usuario_id
     """, {'usuario_id': session['usuario_id']})
-    ingresos_pagados = [row[0] for row in cursor.fetchall()]
 
-    # 2. Eliminar los pagos
+    # 2. Opcional: limpiar la tabla pagos_agua si quieres que el usuario no vea pagos antiguos
     cursor.execute("""
         DELETE FROM pagos_agua
         WHERE usuario_id = :usuario_id
     """, {'usuario_id': session['usuario_id']})
 
-    # 3. Eliminar los ingresos asociados
-    if ingresos_pagados:
-        # Construir lista de parámetros :id0, :id1, ...
-        ids_bind = ', '.join([f":id{i}" for i in range(len(ingresos_pagados))])
-        query = f"DELETE FROM ingresos_agua WHERE id IN ({ids_bind})"
-        bind_dict = {f"id{i}": ingreso_id for i, ingreso_id in enumerate(ingresos_pagados)}
-        cursor.execute(query, bind_dict)
-
     conn.commit()
     cursor.close()
     conn.close()
 
-    flash("🧹 Historial de pagos y sus ingresos asociados fueron eliminados correctamente.", "success")
+    flash("🧹 Historial de pagos fue limpiado para tu cuenta, pero se mantiene en el panel de administración.", "success")
     return redirect('/historial_pagos')
-print(app.url_map)
 @app.route('/perfil', methods=['GET', 'POST'])
 def perfil():
     if 'usuario_id' not in session:
