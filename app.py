@@ -947,7 +947,8 @@ def subir_foto(ingreso_id):
             blob.upload_from_file(foto, content_type=foto.content_type)
 
             # URL pública (si el bucket está configurado como público)
-            url_publica = f"https://storage.googleapis.com/{BUCKET_NAME}/lecturas/{nombre_foto}"
+            bucket_name = os.getenv("GCS_BUCKET_NAME", "bluedate-fotos")
+            url_publica = f"https://storage.googleapis.com/{bucket_name}/lecturas/{nombre_foto}"
 
             # Guardar la URL en la base de datos en vez de la ruta local
             conn = get_connection()
