@@ -5,14 +5,24 @@
   <h2 class="mb-4">Editar ingreso</h2>
 
   <form method="post" class="card p-4 shadow-sm">
+    <!-- Estado de validación -->
     <div class="mb-3">
       <label for="estado" class="form-label">Estado de validación</label>
       <select name="estado" id="estado" class="form-select">
+        <option value="pendiente" {% if ingreso.estado_validacion == 'pendiente' %}selected{% endif %}>Pendiente</option>
         <option value="aprobado" {% if ingreso.estado_validacion == 'aprobado' %}selected{% endif %}>Aprobado</option>
         <option value="rechazado" {% if ingreso.estado_validacion == 'rechazado' %}selected{% endif %}>Rechazado</option>
       </select>
     </div>
 
+    <!-- Mensaje al usuario -->
+    <div class="mb-3">
+      <label for="mensaje_admin" class="form-label">Mensaje al usuario</label>
+      <textarea name="mensaje_admin" id="mensaje_admin" class="form-control" rows="3"
+        placeholder="Ejemplo: Falta enviar foto para confirmar el pago">{{ ingreso.mensaje_admin }}</textarea>
+    </div>
+
+    <!-- Botones -->
     <button type="submit" class="btn btn-primary">
       <i class="fa-solid fa-save me-2"></i> Guardar cambios
     </button>
