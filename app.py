@@ -543,7 +543,8 @@ def historial_pagos():
                consumo,
                monto,
                url_foto,
-               estado_validacion
+               estado_validacion,
+               mensaje_admin   -- ✅ incluir mensaje del admin
         FROM ingresos_agua
         WHERE usuario_id = :1
           AND visible_usuario = 1
@@ -561,8 +562,9 @@ def historial_pagos():
             "fecha": row[1],
             "consumo": row[2],
             "monto": row[3],
-            "url_foto": row[4],             # ✅ ahora se muestra la foto
-            "estado_validacion": row[5]     # ✅ estado consistente con admin
+            "url_foto": row[4],             # ✅ foto
+            "estado_validacion": row[5],    # ✅ estado
+            "mensaje_admin": row[6]         # ✅ mensaje del admin
         }
         for row in rows
     ]
