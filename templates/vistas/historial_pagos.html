@@ -1,10 +1,10 @@
 <div class="d-flex justify-content-center">
-  <div class="card p-4 shadow-lg bg-white rounded" style="max-width: 900px; width: 100%;">
+  <div class="card p-4 shadow-lg bg-white rounded" style="max-width: 1000px; width: 100%;">
     <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white rounded">
       <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Historial de pagos</h5>
       {% if pagos %}
       <form method="POST" action="/limpiar_historial_pagos"
-            onsubmit="return confirm('¿Estás seguro de que deseas eliminar todo el historial de pagos?');">
+            onsubmit="return confirm('¿Estás seguro de que deseas limpiar tu historial de pagos?.');">
         <button type="submit" class="btn btn-danger btn-sm">
           <i class="fa-solid fa-trash"></i> Limpiar historial
         </button>
@@ -20,7 +20,9 @@
               <th>Fecha</th>
               <th>Consumo (m³)</th>
               <th>Monto (CLP)</th>
+              <th>Foto</th>
               <th>Estado</th>
+              <th>Mensaje Admin</th>
               <th>Acción</th>
             </tr>
           </thead>
@@ -37,14 +39,34 @@
                 {% endif %}
               </td>
               <td>
+                {% if pago.url_foto %}
+                  <img src="{{ pago.url_foto }}" alt="Foto ingreso" width="80" class="img-thumbnail">
+                {% else %}
+                  <span class="text-muted">Sin foto</span>
+                {% endif %}
+              </td>
+              <td>
                 {% if pago.estado_validacion == 'pendiente' %}
                   <span class="badge bg-warning text-dark">
-                    <i class="fa-solid fa-exclamation-circle"></i> Pendiente de foto
+                    <i class="fa-solid fa-exclamation-circle"></i> Pendiente
+                  </span>
+                {% elif pago.estado_validacion == 'aprobado' %}
+                  <span class="badge bg-success">
+                    <i class="fa-solid fa-check-circle"></i> Aprobado
+                  </span>
+                {% elif pago.estado_validacion == 'rechazado' %}
+                  <span class="badge bg-danger">
+                    <i class="fa-solid fa-times-circle"></i> Rechazado
                   </span>
                 {% else %}
-                  <span class="badge bg-success">
-                    <i class="fa-solid fa-check-circle"></i> Validado
-                  </span>
+                  <span class="badge bg-secondary">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if pago.mensaje_admin %}
+                  <span class="text-info"><i class="fa-solid fa-comment"></i> {{ pago.mensaje_admin }}</span>
+                {% else %}
+                  <span class="text-muted">Sin mensaje</span>
                 {% endif %}
               </td>
               <td>
