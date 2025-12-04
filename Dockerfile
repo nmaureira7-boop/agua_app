@@ -27,3 +27,5 @@ EXPOSE 5000
 
 # Usar el script de arranque (solo Gunicorn ahora)
 CMD ["./start.sh"]
+
+RUN pip install --no-cache-dir -r requirements.txt
