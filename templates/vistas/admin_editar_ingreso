@@ -4,6 +4,35 @@
 <div class="container mt-4">
   <h2 class="mb-4">Editar ingreso</h2>
 
+  <!-- Información del ingreso -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">Detalles del ingreso</h5>
+      <p><strong>Usuario:</strong> {{ ingreso.nombre }} ({{ ingreso.correo }})</p>
+      <p><strong>Dirección:</strong> {{ ingreso.direccion }}</p>
+      <p><strong>Fecha:</strong> {{ ingreso.fecha }}</p>
+      <p><strong>Consumo:</strong> {{ ingreso.consumo }} m³</p>
+
+      <!-- Mostrar foto si existe -->
+      {% if ingreso.url_foto %}
+        <div class="mb-3">
+          <img src="{{ ingreso.url_foto }}" alt="Foto ingreso" class="img-thumbnail" width="200">
+          <div class="mt-2">
+            <a href="{{ ingreso.url_foto }}" target="_blank" class="btn btn-sm btn-outline-info">
+              <i class="fa-solid fa-eye"></i> Ver en pestaña nueva
+            </a>
+            <a href="{{ ingreso.url_foto }}" download class="btn btn-sm btn-outline-success">
+              <i class="fa-solid fa-download"></i> Descargar
+            </a>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted">Sin foto enviada</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Formulario de edición -->
   <form method="post" class="card p-4 shadow-sm">
     <!-- Estado de validación -->
     <div class="mb-3">
