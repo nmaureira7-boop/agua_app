@@ -933,12 +933,13 @@ def admin_marcar_pendiente(ingreso_id):
 
 @app.route('/subir_foto/<int:ingreso_id>', methods=['GET', 'POST'])
 def subir_foto(ingreso_id):
+    # Verificar sesión
     if 'usuario_id' not in session:
         return redirect('/login')
 
     if request.method == 'POST':
-        foto = request.files['foto']
-        if foto:
+        foto = request.files.get('foto')
+        if foto and foto.filename != "":
             # Nombre seguro y único
             nombre_foto = f"{ingreso_id}_{date.today()}_{secure_filename(foto.filename)}"
 
@@ -946,11 +947,11 @@ def subir_foto(ingreso_id):
             blob = bucket.blob(f"lecturas/{nombre_foto}")
             blob.upload_from_file(foto, content_type=foto.content_type)
 
-            # URL pública (si el bucket está configurado como público)
-            bucket_name = os.getenv("GCS_BUCKET_NAME", "bluedate-fotos")
-            url_publica = f"https://storage.googleapis.com/{bucket_name}/lecturas/{nombre_foto}"
+            # Hacer público y obtener URL
+            blob.make_public()
+            url_publica = blob.public_url
 
-            # Guardar la URL en la base de datos en vez de la ruta local
+            # Guardar la URL en la base de datos en la columna 'foto'
             conn = get_connection()
             cursor = conn.cursor()
             cursor.execute("""
@@ -964,8 +965,13 @@ def subir_foto(ingreso_id):
 
             flash("📸 Foto enviada correctamente. El admin revisará tu pago.", "success")
             return redirect('/historial_pagos')
+        else:
+            flash("No se seleccionó ninguna foto", "error")
+            return redirect(url_for("subir_foto", ingreso_id=ingreso_id))
 
+    # Renderizar formulario de subida
     return render_template('subir_foto.html', ingreso_id=ingreso_id)
+
 
 
 if __name__ == '__main__':
