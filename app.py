@@ -907,5 +907,34 @@ def admin_marcar_pendiente(ingreso_id):
     flash("Ingreso marcado como pendiente de foto.", "warning")
     return redirect(url_for('admin_dashboard'))
 
+
+@app.route('/subir_foto/<int:ingreso_id>', methods=['GET', 'POST'])
+def subir_foto(ingreso_id):
+    if 'usuario_id' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        foto = request.files['foto']
+        if foto:
+            nombre_foto = f"{ingreso_id}_{date.today()}_{foto.filename}"
+            ruta = os.path.join("uploads", "lecturas", nombre_foto)
+            foto.save(ruta)
+
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE ingresos_agua
+                SET foto = :1, estado_validacion = 'enviado'
+                WHERE id = :2
+            """, [nombre_foto, ingreso_id])
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            flash("📸 Foto enviada correctamente. El admin revisará tu pago.", "success")
+            return redirect('/historial_pagos')
+
+    return render_template('subir_foto.html', ingreso_id=ingreso_id)
+
 if __name__ == '__main__':
     app.run(debug=True)
