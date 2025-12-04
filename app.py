@@ -100,6 +100,23 @@ def login():
             session['usuario_id'] = usuario[0]
             session['usuario_rol'] = usuario[2]  # ✅ Guarda el rol en sesión
             flash("Inicio de sesión exitoso. ¡Bienvenido!", "success")
+
+            # 🔍 Revisar si el usuario tiene ingresos pendientes de foto
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) 
+                FROM ingresos_agua 
+                WHERE usuario_id = :1 
+                  AND estado_validacion = 'pendiente'
+            """, [usuario[0]])
+            pendientes = cursor.fetchone()[0]
+            cursor.close()
+            conn.close()
+
+            if pendientes > 0:
+                flash("⚠️ Tu pago está pendiente de confirmación. Debes enviar la foto de la lectura.", "warning")
+
             return redirect('/ingreso')
         else:
             flash("Correo o contraseña incorrectos", "error")
