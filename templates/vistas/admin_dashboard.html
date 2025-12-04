@@ -33,14 +33,14 @@
         <td>
           {% if ingreso.foto %}
             <!-- Miniatura -->
-            <img src="{{ url_for('ver_foto', filename=ingreso.foto) }}" alt="Foto ingreso" width="80" class="img-thumbnail mb-2">
+            <img src="{{ ingreso.foto }}" alt="Foto ingreso" width="80" class="img-thumbnail mb-2">
             <div>
               <!-- Ver en pestaña nueva -->
-              <a href="{{ url_for('ver_foto', filename=ingreso.foto) }}" target="_blank" class="btn btn-sm btn-outline-info">
+              <a href="{{ ingreso.foto }}" target="_blank" class="btn btn-sm btn-outline-info">
                 <i class="fa-solid fa-eye"></i> Ver
               </a>
               <!-- Descargar -->
-              <a href="{{ url_for('ver_foto', filename=ingreso.foto) }}" download class="btn btn-sm btn-outline-success">
+              <a href="{{ ingreso.foto }}" download class="btn btn-sm btn-outline-success">
                 <i class="fa-solid fa-download"></i> Descargar
               </a>
             </div>
