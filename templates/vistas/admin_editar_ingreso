@@ -2,21 +2,23 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-4">Editar ingreso</h2>
+  <h2 class="mb-4">Editar ingreso #{{ ingreso.ingreso_id }}</h2>
 
   <!-- Información del ingreso -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
       <h5 class="card-title">Detalles del ingreso</h5>
-      <p><strong>Usuario:</strong> {{ ingreso.nombre }} ({{ ingreso.correo }})</p>
-      <p><strong>Dirección:</strong> {{ ingreso.direccion }}</p>
-      <p><strong>Fecha:</strong> {{ ingreso.fecha }}</p>
-      <p><strong>Consumo:</strong> {{ ingreso.consumo }} m³</p>
+      <ul class="list-unstyled mb-3">
+        <li><strong>Usuario:</strong> {{ ingreso.nombre }} ({{ ingreso.correo }})</li>
+        <li><strong>Dirección:</strong> {{ ingreso.direccion }}</li>
+        <li><strong>Fecha:</strong> {{ ingreso.fecha }}</li>
+        <li><strong>Consumo:</strong> {{ ingreso.consumo }} m³</li>
+      </ul>
 
       <!-- Mostrar foto si existe -->
       {% if ingreso.url_foto %}
         <div class="mb-3">
-          <img src="{{ ingreso.url_foto }}" alt="Foto ingreso" class="img-thumbnail" width="200">
+          <img src="{{ ingreso.url_foto }}" alt="Foto ingreso" class="img-thumbnail" width="250">
           <div class="mt-2">
             <a href="{{ ingreso.url_foto }}" target="_blank" class="btn btn-sm btn-outline-info">
               <i class="fa-solid fa-eye"></i> Ver en pestaña nueva
@@ -52,12 +54,14 @@
     </div>
 
     <!-- Botones -->
-    <button type="submit" class="btn btn-primary">
-      <i class="fa-solid fa-save me-2"></i> Guardar cambios
-    </button>
-    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary ms-2">
-      <i class="fa-solid fa-arrow-left me-2"></i> Volver al dashboard
-    </a>
+    <div class="d-flex justify-content-start">
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-save me-2"></i> Guardar cambios
+      </button>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary ms-2">
+        <i class="fa-solid fa-arrow-left me-2"></i> Volver al dashboard
+      </a>
+    </div>
   </form>
 </div>
 {% endblock %}
