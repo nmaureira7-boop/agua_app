@@ -1065,24 +1065,28 @@ def admin_actualizar_ingreso(ingreso_id):
         flash("⚠️ Acceso restringido a administradores.", "error")
         return redirect('/login')
 
-    conn = get_connection()
-    cursor = conn.cursor()
+    estado = request.form.get('estado')
+    if estado not in ["aprobado", "rechazado"]:
+        flash("⚠️ Estado inválido.", "error")
+        return redirect('/admin/dashboard')
 
-    estado = request.form.get('estado')  # "aprobado" o "rechazado"
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE ingresos_agua
+            SET estado_validacion = :1
+            WHERE id = :2
+        """, [estado, ingreso_id])
+        conn.commit()
+        flash("✅ Estado de ingreso actualizado.", "success")
+    except Exception as e:
+        flash(f"❌ Error al actualizar ingreso: {e}", "error")
+    finally:
+        cursor.close()
+        conn.close()
 
-    cursor.execute("""
-        UPDATE ingresos_agua
-        SET estado_validacion = :1
-        WHERE id = :2
-    """, [estado, ingreso_id])
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    flash("✅ Estado de ingreso actualizado.", "success")
     return redirect('/admin/dashboard')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
