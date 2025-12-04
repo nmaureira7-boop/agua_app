@@ -915,5 +915,24 @@ from flask import send_from_directory
 def ver_foto(filename):
     return send_from_directory(os.path.join("uploads", "lecturas"), filename)
 
+@app.route('/admin/marcar_pendiente/<int:ingreso_id>', methods=['POST'])
+def admin_marcar_pendiente(ingreso_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Marcar el ingreso como pendiente y dejar mensaje automático
+    cursor.execute("""
+        UPDATE ingresos_agua
+        SET estado_validacion = :1, mensaje_admin = :2
+        WHERE id = :3
+    """, ['pendiente', 'Falta enviar foto para confirmar pago', ingreso_id])
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Ingreso marcado como pendiente de foto.", "warning")
+    return redirect(url_for('admin_dashboard'))
+
 if __name__ == '__main__':
     app.run(debug=True)
