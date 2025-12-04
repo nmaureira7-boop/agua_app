@@ -1,35 +1,45 @@
-  <div class="card bg-light mb-4">
-    <div class="card-header">
-      <h5><i class="fa-solid fa-money-bill-wave"></i> Confirmar pago</h5>
-    </div>
-    <div class="card-body">
-      <p><strong>Dirección:</strong> {{ direccion }}</p>
-      <p><strong>Fecha de lectura:</strong> {{ fecha }}</p>
-      <p><strong>Consumo registrado:</strong> {{ consumo }} m³</p>
-      <p><strong>Monto a pagar:</strong> ${{ monto | round(0) }}</p>
+<div class="d-flex justify-content-center">
+  <div class="card p-4 shadow-lg bg-white rounded" style="max-width: 500px; width: 100%;">
+    <h2 class="text-center mb-4">
+      <i class="fa-solid fa-money-bill-wave"></i> Confirmar pago
+    </h2>
 
-      <form method="POST">
-        <button type="submit" class="btn btn-success w-100">
-          <i class="fa-solid fa-circle-check"></i> Confirmar y pagar
-        </button>
-      </form>
+    <!-- Detalle del pago -->
+    <div class="alert alert-info">
+      <p><strong>Detalle de consumo:</strong></p>
+      <ul class="mb-2">
+        <li><i class="fa-solid fa-location-dot"></i> <strong>Dirección:</strong> {{ direccion }}</li>
+        <li><i class="fa-solid fa-calendar-day"></i> <strong>Fecha de lectura:</strong> {{ fecha }}</li>
+        <li><i class="fa-solid fa-tint"></i> <strong>Consumo:</strong> {{ consumo }} m³</li>
+        <li><i class="fa-solid fa-dollar-sign"></i> <strong>Monto:</strong> ${{ monto | round(0) }}</li>
+      </ul>
     </div>
+
+    <!-- Botón de confirmación -->
+    <form method="POST">
+      <button type="submit" class="btn btn-success w-100 mb-3">
+        <i class="fa-solid fa-circle-check"></i> Confirmar y pagar
+      </button>
+    </form>
+
+    <!-- Resumen de ingresos -->
+    {% if resumen_ingresos %}
+      <hr>
+      <h5 class="mt-4 text-center"><i class="fa-solid fa-list"></i> Resumen de ingresos</h5>
+      <ul class="list-group">
+        {% for ingreso in resumen_ingresos %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <i class="fa-solid fa-calendar-day"></i> {{ ingreso.fecha }} — {{ ingreso.consumo }} m³
+            </span>
+            {% if ingreso.estado == 'pagado' %}
+              <span class="badge bg-success">Pagado (${{ ingreso.monto | round(0) }})</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Pendiente</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
   </div>
-
-  <hr>
-
-  <h5 class="mt-4 text-center">Resumen de ingresos</h5>
-  <ul class="list-group">
-    {% for ingreso in resumen_ingresos %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ ingreso.fecha }}</strong> — {{ ingreso.direccion }} — {{ ingreso.consumo }} m³
-        </div>
-        {% if ingreso.estado == 'pagado' %}
-          <span class="badge bg-success">Pagado (${{ ingreso.monto | round(0) }})</span>
-        {% else %}
-          <span class="badge bg-warning text-dark">Pendiente</span>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
+</div>
