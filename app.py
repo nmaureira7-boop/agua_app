@@ -951,19 +951,26 @@ def subir_foto(ingreso_id):
             blob.make_public()
             url_publica = blob.public_url
 
-            # Guardar la URL en la base de datos en la columna 'foto'
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE ingresos_agua
-                SET foto = :1, estado_validacion = 'enviado'
-                WHERE id = :2
-            """, [url_publica, ingreso_id])
-            conn.commit()
-            cursor.close()
-            conn.close()
+            # Guardar la URL en la base de datos
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE ingresos_agua
+                    SET url_foto = :1, estado_validacion = 'enviado'
+                    WHERE id = :2
+                """, [url_publica, ingreso_id])
+                conn.commit()
+                flash("📸 Foto enviada correctamente. El admin revisará tu pago.", "success")
+            except Exception as e:
+                flash(f"Error al guardar la foto: {e}", "error")
+            finally:
+                # Cerrar recursos aunque haya error
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
 
-            flash("📸 Foto enviada correctamente. El admin revisará tu pago.", "success")
             return redirect('/historial_pagos')
         else:
             flash("No se seleccionó ninguna foto", "error")
@@ -971,8 +978,6 @@ def subir_foto(ingreso_id):
 
     # Renderizar formulario de subida
     return render_template('subir_foto.html', ingreso_id=ingreso_id)
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
