@@ -771,10 +771,11 @@ def admin_dashboard():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ✅ Obtener todos los ingresos con datos de usuario
+    # ✅ Obtener todos los ingresos con datos de usuario, incluyendo url_foto y mensaje_admin
     cursor.execute("""
         SELECT u.id, u.nombre, u.correo, u.direccion,
-               i.id, i.fecha, i.lectura_m3, i.consumo, i.monto, i.foto, i.estado_validacion
+               i.id, i.fecha, i.lectura_m3, i.consumo, i.monto,
+               i.url_foto, i.estado_validacion, i.mensaje_admin
         FROM ingresos_agua i
         LEFT JOIN usuarios u ON i.usuario_id = u.id
         ORDER BY i.fecha DESC
@@ -795,8 +796,9 @@ def admin_dashboard():
             "lectura": row[6],
             "consumo": row[7],
             "monto": row[8],
-            "foto": row[9],
-            "estado": row[10]
+            "url_foto": row[9],              # ✅ ahora se llama url_foto
+            "estado_validacion": row[10],    # ✅ nombre consistente con template
+            "mensaje_admin": row[11]         # ✅ agregado para mostrar mensajes
         }
         for row in registros
     ]
