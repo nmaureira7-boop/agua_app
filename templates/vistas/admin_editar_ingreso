@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Editar ingreso</h2>
+
+  <form method="post" class="card p-4 shadow-sm">
+    <div class="mb-3">
+      <label for="estado" class="form-label">Estado de validación</label>
+      <select name="estado" id="estado" class="form-select">
+        <option value="aprobado" {% if ingreso.estado_validacion == 'aprobado' %}selected{% endif %}>Aprobado</option>
+        <option value="rechazado" {% if ingreso.estado_validacion == 'rechazado' %}selected{% endif %}>Rechazado</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="fa-solid fa-save me-2"></i> Guardar cambios
+    </button>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary ms-2">
+      <i class="fa-solid fa-arrow-left me-2"></i> Volver al dashboard
+    </a>
+  </form>
+</div>
+{% endblock %}
