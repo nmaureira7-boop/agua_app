@@ -166,9 +166,10 @@ def ingreso():
         resultado = cursor.fetchone()
         lectura_anterior = resultado[0] if resultado and resultado[0] is not None else 0
 
-        consumo = lectura_actual
+        # ✅ Calcular consumo real
+        consumo = lectura_actual - lectura_anterior
         if consumo <= 0:
-            flash("⚠️ La lectura ingresada es menor a la anterior.", "warning")
+            flash("⚠️ La lectura ingresada es menor o igual a la anterior.", "warning")
             cursor.close()
             conn.close()
             return redirect('/ingreso')
@@ -190,11 +191,13 @@ def ingreso():
             ruta_foto = os.path.join(upload_folder, nombre_foto)
             foto.save(ruta_foto)
 
-        # ✅ Insertar ingreso con lectura, consumo, monto y foto
+        # ✅ Insertar ingreso y obtener ID
+        ingreso_id_var = cursor.var(int)
         cursor.execute("""
             INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha, foto)
             VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'), :6)
-        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy, nombre_foto])
+            RETURNING id INTO :7
+        """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy, nombre_foto, ingreso_id_var])
 
         # ✅ Actualizar dirección si cambió
         if direccion_form != direccion_usuario:
@@ -206,7 +209,9 @@ def ingreso():
         conn.commit()
         cursor.close()
         conn.close()
-        return redirect('/pago')
+
+        # ✅ Redirigir al pago con el ingreso recién creado
+        return redirect(url_for('pago', ingreso_id=ingreso_id_var.getvalue()))
 
     cursor.close()
     conn.close()
