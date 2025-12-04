@@ -201,22 +201,18 @@ def ingreso():
         # ✅ Dirección ingresada (si se modificó)
         direccion_form = request.form.get('direccion1') or direccion_usuario
 
-        # ✅ Procesar fotografía (solo guardar archivo)
-        foto = request.files.get('foto')
+        # ✅ Procesar fotografía (solo guardar nombre, luego se sube en /subir_foto)
         nombre_foto = None
+        foto = request.files.get('foto')
         if foto and foto.filename != '':
-            upload_folder = os.path.join("uploads", "lecturas")
-            os.makedirs(upload_folder, exist_ok=True)
-
             nombre_foto = f"{session['usuario_id']}_{fecha_hoy}_{secure_filename(foto.filename)}"
-            ruta_foto = os.path.join(upload_folder, nombre_foto)
-            foto.save(ruta_foto)
+            # Aquí solo guardamos el nombre, la subida real se hace en /subir_foto
 
         # ✅ Insertar ingreso y obtener ID
         ingreso_id_var = cursor.var(int)
         cursor.execute("""
-            INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha, foto)
-            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'), :6)
+            INSERT INTO ingresos_agua (usuario_id, lectura_m3, consumo, monto, fecha, url_foto, estado_validacion, visible_usuario)
+            VALUES (:1, :2, :3, :4, TO_DATE(:5, 'YYYY-MM-DD'), :6, 'pendiente', 1)
             RETURNING id INTO :7
         """, [session['usuario_id'], lectura_actual, consumo, monto, fecha_hoy, nombre_foto, ingreso_id_var])
 
