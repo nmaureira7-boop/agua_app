@@ -2,29 +2,50 @@
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Historial de pagos</h5>
     {% if pagos %}
-    <form method="POST" action="/limpiar_historial_pagos" onsubmit="return confirm('¿Estás seguro de que deseas eliminar todo el historial de pagos?');">
+    <form method="POST" action="/limpiar_historial_pagos" 
+          onsubmit="return confirm('¿Estás seguro de que deseas eliminar todo el historial de pagos?');">
       <button type="submit" class="btn btn-danger btn-sm">
         <i class="fa-solid fa-trash"></i> Limpiar historial
       </button>
     </form>
     {% endif %}
   </div>
+
   <div class="card-body">
     {% if pagos %}
-      <table class="table table-striped">
-        <thead>
+      <table class="table table-striped align-middle">
+        <thead class="table-dark">
           <tr>
             <th>Fecha</th>
             <th>Consumo (m³)</th>
             <th>Monto (CLP)</th>
+            <th>Estado</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
           {% for pago in pagos %}
           <tr>
-            <td>{{ pago[0] }}</td>
-            <td>{{ pago[1] }}</td>
-            <td>${{ pago[2] | round(0) }}</td>
+            <td>{{ pago.fecha }}</td>
+            <td>{{ pago.consumo }}</td>
+            <td>${{ pago.monto | round(0) }}</td>
+            <td>
+              {% if pago.estado_validacion == 'pendiente' %}
+                <span class="badge bg-warning text-dark">Pendiente de foto</span>
+              {% else %}
+                <span class="badge bg-success">Validado</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if pago.estado_validacion == 'pendiente' %}
+                <a href="{{ url_for('subir_foto', ingreso_id=pago.ingreso_id) }}" 
+                   class="btn btn-sm btn-primary">
+                  <i class="fa-solid fa-camera"></i> Enviar foto
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>
