@@ -9,7 +9,7 @@ from datetime import date
 # Librerías externas
 import pandas as pd
 import oracledb
-from flask import Flask, render_template, request, redirect, session, flash, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from PIL import Image  # solo si realmente lo usas
@@ -906,10 +906,6 @@ def admin_eliminar_ingreso(ingreso_id):
 
     flash("✅ Ingreso eliminado.", "success")
     return redirect('/admin/dashboard')
-
-from flask import send_from_directory
-
-from flask import send_from_directory
 
 @app.route('/uploads/lecturas/<filename>')
 def ver_foto(filename):
