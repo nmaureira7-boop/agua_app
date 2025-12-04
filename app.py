@@ -886,5 +886,21 @@ def admin_editar_ingreso(ingreso_id):
     conn.close()
     return render_template('vistas/admin_editar_ingreso.html', ingreso=ingreso)
 
+@app.route('/admin/eliminar_ingreso/<int:ingreso_id>', methods=['POST'])
+def admin_eliminar_ingreso(ingreso_id):
+    if 'usuario_id' not in session or session.get('usuario_rol') != 'admin':
+        flash("⚠️ Acceso restringido a administradores.", "error")
+        return redirect('/login')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM ingresos_agua WHERE id = :1", [ingreso_id])
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("✅ Ingreso eliminado.", "success")
+    return redirect('/admin/dashboard')
+
 if __name__ == '__main__':
     app.run(debug=True)
