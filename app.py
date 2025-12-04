@@ -209,7 +209,7 @@ def ingreso():
 
             # Inicializar cliente de GCS
             storage_client = storage.Client()
-            bucket = storage_client.bucket("TU_BUCKET_NAME")  # ⚠️ reemplaza con tu bucket
+            bucket = storage_client.bucket("bluedate-fotos")  # ⚠️ reemplaza con tu bucket
             blob = bucket.blob(nombre_foto)
 
             # Subir archivo directamente desde el objeto FileStorage
